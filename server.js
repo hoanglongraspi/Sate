@@ -3,10 +3,15 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const multer = require('multer');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+
+// Load data from data.json
+const rawData = fs.readFileSync(path.join(__dirname, 'data.json'));
+const speechData = JSON.parse(rawData);
 
 // Set up middleware
 app.use(express.json());
@@ -39,7 +44,7 @@ const upload = multer({
 
 // Routes
 app.get('/', (req, res) => {
-  res.render('index');
+  res.render('index', { data: speechData });
 });
 
 app.post('/upload', upload.single('audio'), (req, res) => {
@@ -56,30 +61,58 @@ io.on('connection', (socket) => {
   console.log('A user connected');
   
   socket.on('analyze-speech', (audioData) => {
-    // Mock analysis results
+    // Use data from data.json for analysis results
+    const childSegments = speechData.segments.filter(segment => segment.speaker === "Child");
+    
+    // Count issues
+    let totalIssues = 0;
+    let fillerWords = 0;
+    let repetitions = 0;
+    let pauses = 0;
+    let mispronunciations = 0;
+    let totalDuration = 0;
+    
+    childSegments.forEach(segment => {
+      fillerWords += segment.fillerwords.length;
+      repetitions += segment.repetitions.length;
+      pauses += segment.pauses.length;
+      mispronunciations += segment.mispronunciation.length;
+      
+      totalIssues += segment.fillerwords.length + 
+                     segment.repetitions.length + 
+                     segment.pauses.length + 
+                     segment.mispronunciation.length;
+                     
+      // Calculate total duration
+      if (segment.end && segment.start) {
+        totalDuration += (segment.end - segment.start);
+      }
+    });
+    
+    // Format duration as mm:ss
+    const minutes = Math.floor(totalDuration / 60);
+    const seconds = Math.floor(totalDuration % 60);
+    const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    // Calculate speech rate (rough estimate - words per minute)
+    const totalWords = childSegments.reduce((total, segment) => total + segment.words.length, 0);
+    const speechRate = Math.round((totalWords / totalDuration) * 60);
+    
     const results = {
-      duration: '5:41',
-      totalIssues: 12,
-      speechRate: 100,
+      duration: formattedDuration,
+      totalIssues: totalIssues,
+      speechRate: speechRate,
+      transcript: speechData.segments,
       topIssues: {
-        syllable: 3,
-        filterWords: 3,
-        grammar: 2
+        syllable: mispronunciations,
+        filterWords: fillerWords,
+        grammar: repetitions
       },
-      transcript: [
-        {role: 'Doctor', text: 'So, how have your classes been going this semester?'},
-        {role: 'Patient', text: 'Um, it\'s been... okay, I guess. I\'ve had some trouble with, uh, communimacation—communication in presentations.'},
-        {role: 'Doctor', text: 'Presentations? Can you explain more?'},
-        {role: 'Patient', text: 'Yeah, like... when I speak, sometimes I say the same thing again, I say the same thing again without noticing. And I pause a lot. Like I\'ll be mid-sentence and just...stop...and, uh....yeah.'},
-        {role: 'Doctor', text: 'That sounds stressful. Anything else?'},
-        {role: 'Patient', text: 'I also get stuck on w-w-w-words sometimes. Especially when I\'m nervous. And my grammar\'s weird when I\'m under pressure—like I\'ll say things like, "He don\'t know what happened" instead of the right way.'}
-      ],
       issues: [
-        {type: 'Mispronunciation', time: '1:15'},
-        {type: 'Grammar', time: '2:30'},
-        {type: 'Pauses', time: '3:20'},
-        {type: 'Repetition', time: '3:45'},
-        {type: 'Filler words', time: '4:10'}
+        {type: 'Mispronunciation', count: mispronunciations},
+        {type: 'Pauses', count: pauses},
+        {type: 'Repetition', count: repetitions},
+        {type: 'Filler words', count: fillerWords}
       ]
     };
     
@@ -92,7 +125,6 @@ io.on('connection', (socket) => {
 });
 
 // Create uploads directory if it doesn't exist
-const fs = require('fs');
 const uploadDir = path.join(__dirname, 'public/uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });

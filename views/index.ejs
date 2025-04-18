@@ -11,9 +11,6 @@
   <div class="flex h-screen overflow-hidden">
     <!-- Left Sidebar -->
     <div id="leftSidebar" class="w-60 bg-white shadow-md flex flex-col overflow-hidden transition-all duration-300 relative">
-      <!-- Resize handle for left sidebar -->
-      <div id="leftResizeHandle" class="absolute top-0 right-0 bottom-0 w-1 bg-transparent hover:bg-blue-400 cursor-col-resize z-10"></div>
-      
       <!-- Toggle button to hide sidebar -->
       <button id="toggleLeftSidebar" class="absolute top-3 right-3 p-1.5 text-neutral-darker hover:text-primary z-20 rounded-full hover:bg-blue-50">
         <i class="material-icons">chevron_left</i>
@@ -50,6 +47,16 @@
         <div class="py-2 px-5 text-xs text-neutral-darker bg-neutral-lightest">Sat, 12 Apr</div>
         <div class="note-item active">
           <div class="font-medium">Note 1</div>
+          <div class="text-xs text-neutral-darker">10:15 PM · 1 min</div>
+        </div>
+        <div class="note-item">
+          <div class="font-medium">Note 2</div>
+          <div class="text-xs text-neutral-darker">10:47 PM · 12 min</div>
+        </div>
+        
+        <div class="py-2 px-5 text-xs text-neutral-darker bg-neutral-lightest">Sat, 12 Apr</div>
+        <div class="note-item">
+          <div class="font-medium">Note 1</div>
           <div class="text-xs text-neutral-darker">10:15 PM · 35 min</div>
         </div>
         <div class="note-item">
@@ -57,17 +64,25 @@
           <div class="text-xs text-neutral-darker">10:47 PM · 12 min</div>
         </div>
         
-        <% for (let i = 0; i < 3; i++) { %>
-          <div class="py-2 px-5 text-xs text-neutral-darker bg-neutral-lightest">Sat, 12 Apr</div>
-          <div class="note-item">
-            <div class="font-medium">Note 1</div>
-            <div class="text-xs text-neutral-darker">10:15 PM · 35 min</div>
-          </div>
-          <div class="note-item">
-            <div class="font-medium">Note 2</div>
-            <div class="text-xs text-neutral-darker">10:47 PM · 12 min</div>
-          </div>
-        <% } %>
+        <div class="py-2 px-5 text-xs text-neutral-darker bg-neutral-lightest">Sat, 12 Apr</div>
+        <div class="note-item">
+          <div class="font-medium">Note 1</div>
+          <div class="text-xs text-neutral-darker">10:15 PM · 35 min</div>
+        </div>
+        <div class="note-item">
+          <div class="font-medium">Note 2</div>
+          <div class="text-xs text-neutral-darker">10:47 PM · 12 min</div>
+        </div>
+        
+        <div class="py-2 px-5 text-xs text-neutral-darker bg-neutral-lightest">Sat, 12 Apr</div>
+        <div class="note-item">
+          <div class="font-medium">Note 1</div>
+          <div class="text-xs text-neutral-darker">10:15 PM · 35 min</div>
+        </div>
+        <div class="note-item">
+          <div class="font-medium">Note 2</div>
+          <div class="text-xs text-neutral-darker">10:47 PM · 12 min</div>
+        </div>
       </div>
     </div>
     
@@ -101,69 +116,24 @@
         <!-- Scrollable Conversation -->
         <div class="flex-1 overflow-y-auto px-6 pb-36">
           <div class="space-y-5 mb-6">
-            <!-- Doctor message -->
             <div class="relative">
-              <div class="font-medium mb-1">Doctor</div>
+              <div class="font-medium mb-1">Examiner</div>
               <div class="message-bubble doctor">
-                So, how have your classes been going this semester?
-              </div>
-              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
-                <i class="material-icons text-neutral-dark">edit</i>
+                Okay, Tell me this story
               </div>
             </div>
             
-            <!-- Patient message -->
             <div class="relative">
               <div class="font-medium mb-1">Patient</div>
               <div class="message-bubble patient">
-                Um, it's been... okay, I guess. I've had some trouble with, uh, communimacation—communication in presentations.
-              </div>
-              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
-                <i class="material-icons text-neutral-dark">edit</i>
-              </div>
-            </div>
-            
-            <!-- Doctor message -->
-            <div class="relative">
-              <div class="font-medium mb-1">Doctor</div>
-              <div class="message-bubble doctor">
-                Presentations? Can you explain more?
-              </div>
-              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
-                <i class="material-icons text-neutral-dark">edit</i>
-              </div>
-            </div>
-            
-            <!-- Patient message with highlights -->
-            <div class="relative">
-              <div class="font-medium mb-1">Patient</div>
-              <div class="message-bubble patient">
-                Yeah, like... when I speak, sometimes I <span class="highlight highlight-repetition">say the same thing again, I say the same thing again</span> without noticing. And I pause a lot. Like I'll be mid-sentence and just...<span class="highlight highlight-pause">stop</span>...and, <span class="highlight highlight-filler">uh</span>....yeah.
-              </div>
-              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
-                <i class="material-icons text-neutral-dark">edit</i>
-              </div>
-            </div>
-            
-            <!-- Doctor message -->
-            <div class="relative">
-              <div class="font-medium mb-1">Doctor</div>
-              <div class="message-bubble doctor">
-                That sounds stressful. Anything else?
-              </div>
-              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
-                <i class="material-icons text-neutral-dark">edit</i>
-              </div>
-            </div>
-            
-            <!-- Patient message with highlights -->
-            <div class="relative">
-              <div class="font-medium mb-1">Patient</div>
-              <div class="message-bubble patient">
-                I also get stuck on <span class="highlight highlight-stuttering">w-w-w-words</span> sometimes. Especially when I'm nervous. And my grammar's weird when I'm under pressure—like I'll say things like, <span class="highlight highlight-grammar">"He don't know what happened"</span> instead of the right way.
-              </div>
-              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
-                <i class="material-icons text-neutral-dark">edit</i>
+                <span class="highlight highlight-filler filler1 word-timestamp" data-timestamp="5.295:5.586" data-type="filler">um</span><span class="highlight highlight-pause pause1" data-timestamp="5.586:7.248" data-type="pause">...</span><span class="word-timestamp" data-timestamp="7.248:7.328">a</span> <span class="word-timestamp" data-timestamp="7.428:7.968">rabbit</span> . <span class="word-timestamp" data-timestamp="8.555:9.315">some</span> <span class="word-timestamp" data-timestamp="9.315:9.835">help</span> <span class="highlight highlight-repetition repetition1" data-timestamp="9.835:13.312" data-type="repetition"><span class="word-timestamp" data-timestamp="9.835:10.215">with</span> <span class="word-timestamp" data-timestamp="10.215:10.755">the</span> <span class="highlight highlight-filler filler2" data-timestamp="10.755:11.295" data-type="filler">um</span> 
+                <span class="word-timestamp" data-timestamp="11.295:12.315">with</span> <span class="word-timestamp" data-timestamp="12.315:13.312">the</span></span><span class="highlight highlight-pause pause11" data-timestamp="13.312:14.000" data-type="pause">...</span><span class="word-timestamp" data-timestamp="13.992:14.373">dog</span> . <span class="word-timestamp" data-timestamp="15.555:15.695">and</span> <span class="highlight highlight-pause pause11" data-timestamp="13.312:14.000" data-type="pause">...</span> <span class="word-timestamp" data-timestamp="16.574:16.715">he</span> <span class="word-timestamp" data-timestamp="16.715:17.035">wants</span> <span class="word-timestamp" data-timestamp="17.035:17.295">some</span> <span class="word-timestamp" data-timestamp="17.295:17.675">help</span> <span class="word-timestamp" data-timestamp="17.675:18.335">to</span> <span class="word-timestamp" data-timestamp="18.335:18.755">with</span> <span class="word-timestamp" data-timestamp="18.755:18.995">me</span><span class="highlight highlight-pause pause2" data-timestamp="15.695:16.574" data-type="pause">...</span><span class="word-timestamp" data-timestamp="19.395:19.495">to</span> <span class="word-timestamp" data-timestamp="19.495:19.635">know</span> <span class="word-timestamp" data-timestamp="19.635:19.855">how</span> <span class="word-timestamp" data-timestamp="19.855:20.075">to</span> <span class="word-timestamp" data-timestamp="20.075:20.415">make</span> <span class="word-timestamp" data-timestamp="20.415:20.715">a</span> <span class="word-timestamp" data-timestamp="20.715:21.215">sandcastle</span> . <span class="word-timestamp" data-timestamp="25.305:25.545">and</span> <span class="word-timestamp" data-timestamp="25.545:25.745">he</span> <span class="highlight highlight-filler filler3" data-timestamp="25.745:26.485" data-type="filler">um</span> <span class="word-timestamp" data-timestamp="26.485:26.725">the</span> <span class="word-timestamp" data-timestamp="26.725:27.125">rabbit</span> <span class="word-timestamp" data-timestamp="27.125:27.705">make</span> <span class="word-timestamp" data-timestamp="27.705:28.245">a</span> <span class="word-timestamp" data-timestamp="28.245:28.745">sandcastle</span> . <span class="word-timestamp" data-timestamp="30.545:32.305">and</span>
+                <span class="highlight highlight-pause pause3" data-timestamp="32.305:33.305" data-type="pause">...</span>
+                <span class="word-timestamp" data-timestamp="33.305:34.845">the</span> <span class="word-timestamp" data-timestamp="34.845:35.325">rabbit</span> <span class="word-timestamp" data-timestamp="35.325:35.825">dump</span> <span class="word-timestamp" data-timestamp="35.825:36.345">all</span> <span class="word-timestamp" data-timestamp="36.345:36.765">the</span> <span class="word-timestamp" data-timestamp="36.765:37.225">sand</span> <span class="word-timestamp" data-timestamp="37.225:37.865">to</span> <span class="highlight highlight-repetition repetition2" data-timestamp="37.865:40.505" data-type="repetition"><span class="word-timestamp" data-timestamp="37.865:38.925">the</span> <span class="highlight highlight-pause pause11" data-timestamp="13.312:14.000" data-type="pause">...</span> <span class="word-timestamp" data-timestamp="39.525:40.505">the</span></span> <span class="word-timestamp" data-timestamp="40.505:41.005">sandcastle</span> . <span class="word-timestamp" data-timestamp="43.715:43.935">and</span>
+                <span class="highlight highlight-pause pause4" data-timestamp="38.925:39.525" data-type="pause">...</span><span class="highlight highlight-repetition repetition3" data-timestamp="44.535:46.075" data-type="repetition"><span class="word-timestamp" data-timestamp="44.535:45.055">he</span> <span class="word-timestamp" data-timestamp="45.055:45.555">is</span> <span class="word-timestamp" data-timestamp="45.555:46.075">he</span></span> <span class="word-timestamp" data-timestamp="46.075:46.555">that</span> <span class="highlight highlight-mispronunciation mispronunciation1" data-timestamp="46.555:47.995" data-type="mispronunciation">accidentally</span> 
+                <span class="highlight highlight-filler filler4" data-timestamp="47.995:48.415" data-type="filler">um</span><span class="highlight highlight-pause pause5" data-timestamp="48.415:49.115" data-type="pause">...</span><span class="word-timestamp" data-timestamp="49.115:50.055">broke</span> <span class="word-timestamp" data-timestamp="50.055:51.155">his</span> <span class="highlight highlight-repetition repetition4" data-timestamp="51.155:53.535" data-type="repetition"><span class="word-timestamp" data-timestamp="51.155:51.695">the</span> <span class="word-timestamp" data-timestamp="51.695:52.315">dog's</span> <span class="highlight highlight-pause pause6" data-timestamp="52.315:52.814" data-type="pause">...</span><span class="word-timestamp" data-timestamp="52.815:53.115">the</span> <span class="word-timestamp" data-timestamp="53.115:53.535">dog</span></span> 
+                <span class="word-timestamp" data-timestamp="54.138:55.535">sandcastle</span> . <span class="word-timestamp" data-timestamp="58.075:58.475">and</span><span class="highlight highlight-pause pause7" data-timestamp="43.935:44.535" data-type="pause">...</span><span class="word-timestamp" data-timestamp="59.175:59.435">he</span><span class="highlight highlight-pause pause8" data-timestamp="53.535:54.138" data-type="pause">...</span><span class="word-timestamp" data-timestamp="60.437:61.355">the</span> <span class="word-timestamp" data-timestamp="61.355:61.875">dog</span> <span class="word-timestamp" data-timestamp="61.875:62.615">never</span> <span class="highlight highlight-filler filler5" data-timestamp="62.615:63.235" data-type="filler">um</span>
+                <span class="word-timestamp" data-timestamp="63.235:64.055">make</span> <span class="word-timestamp" data-timestamp="64.055:64.315">a</span> <span class="word-timestamp" data-timestamp="64.315:64.815">sandcastle</span> . <span class="word-timestamp" data-timestamp="65.595:65.655">and</span> <span class="word-timestamp" data-timestamp="65.655:65.935">he</span> <span class="word-timestamp" data-timestamp="65.935:66.435">cried</span> . <span class="word-timestamp" data-timestamp="67.355:67.415">and</span> <span class="word-timestamp" data-timestamp="67.415:67.995">there</span> <span class="word-timestamp" data-timestamp="67.995:68.495">bunny</span> <span class="word-timestamp" data-timestamp="68.495:69.075">rabbit</span><span class="highlight highlight-pause pause9" data-timestamp="69.075:69.763" data-type="pause">...</span><span class="highlight highlight-filler filler6" data-timestamp="69.763:70.535" data-type="filler">um</span><span class="highlight highlight-pause pause10" data-timestamp="70.535:71.132" data-type="pause">...</span><span class="word-timestamp" data-timestamp="71.132:71.635">be</span> <span class="word-timestamp" data-timestamp="71.635:72.095">sorry</span> <span class="word-timestamp" data-timestamp="72.095:72.475">that</span> <span class="word-timestamp" data-timestamp="72.475:72.975">he</span><span class="highlight highlight-pause pause14" data-timestamp="71.132:71.700" data-type="pause">...</span> .
               </div>
             </div>
           </div>
@@ -174,36 +144,59 @@
           <div class="px-4 py-4">
             <!-- Timeline -->
             <div class="flex items-center justify-between mb-4 relative">
-              <span class="text-xs text-neutral-darker">2:16</span>
+              <span class="text-xs text-neutral-darker" id="currentTime">0:00</span>
               <div class="relative flex-1 mx-3 h-1 bg-neutral-light rounded-full overflow-hidden">
-                <div class="absolute inset-0 rounded-full audio-progress-indicator" style="width: 40%;"></div>
-                <div class="audio-progress-handle" style="left: 40%;"></div>
+                <div class="absolute inset-0 rounded-full audio-progress-indicator" style="width: 0%;"></div>
+                <div class="audio-progress-handle" style="left: 0%;"></div>
               </div>
-              <span class="text-xs text-neutral-darker">5:41</span>
+              <span class="text-xs text-neutral-darker" id="duration">0:00</span>
             </div>
             
             <!-- Control buttons and tags -->
             <div class="flex justify-between items-center">
               <!-- Control buttons -->
               <div class="flex gap-1 items-center">
-                <button class="p-1 text-neutral-dark hover:text-black transition-colors">
+                <button class="p-1 text-neutral-dark hover:text-black transition-colors" id="prevButton">
                   <i class="material-icons text-sm">skip_previous</i>
                 </button>
-                <button class="flex items-center justify-center w-8 h-8 bg-neutral-darkest text-white rounded-full hover:bg-black shadow-sm transition-all hover:shadow-md">
+                <button class="flex items-center justify-center w-8 h-8 bg-neutral-darkest text-white rounded-full hover:bg-black shadow-sm transition-all hover:shadow-md" id="playButton">
                   <i class="material-icons text-lg">play_arrow</i>
                 </button>
-                <button class="p-1 text-neutral-dark hover:text-black transition-colors">
+                <button class="p-1 text-neutral-dark hover:text-black transition-colors" id="nextButton">
                   <i class="material-icons text-sm">skip_next</i>
                 </button>
+                <!-- <button id="annotateBtn" class="ml-3 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium flex items-center hover:bg-green-200 transition-colors">
+                  <i class="material-icons text-sm mr-1">edit</i>
+                  Annotate
+                </button> -->
               </div>
               
               <!-- Tags -->
-              <div class="flex flex-wrap gap-1">
-                <span class="px-3 py-1 rounded-full text-xs bg-purple-200 text-purple-900">Mispronunciation</span>
-                <span class="px-3 py-1 rounded-full text-xs bg-emerald-100 text-emerald-900">Grammar</span>
-                <span class="px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-900">Pauses</span>
-                <span class="px-3 py-1 rounded-full text-xs bg-amber-200 text-amber-900">Repetition</span>
-                <span class="px-3 py-1 rounded-full text-xs bg-orange-200 text-orange-900">Filler words</span>
+              <div class="flex flex-wrap gap-1 annotation-filters">
+                <button class="px-3 py-1 rounded-full text-xs text-purple-900 border border-purple-500 bg-transparent hover:bg-purple-100 transition-colors annotation-filter" data-type="mispronunciation">
+                  <i class="material-icons text-xs mr-1 align-text-top">visibility</i>
+                  Mispronunciation
+                </button>
+                <button class="px-3 py-1 rounded-full text-xs text-blue-900 border border-blue-500 bg-transparent hover:bg-blue-100 transition-colors annotation-filter" data-type="pause">
+                  <i class="material-icons text-xs mr-1 align-text-top">visibility</i>
+                  Pauses
+                </button>
+                <button class="px-3 py-1 rounded-full text-xs text-amber-700 border border-amber-500 bg-transparent hover:bg-amber-100 transition-colors annotation-filter" data-type="grammar">
+                  <i class="material-icons text-xs mr-1 align-text-top">visibility</i>
+                  Grammar
+                </button>
+                <button class="px-3 py-1 rounded-full text-xs text-amber-900 border border-amber-500 bg-transparent hover:bg-amber-100 transition-colors annotation-filter" data-type="repetition">
+                  <i class="material-icons text-xs mr-1 align-text-top">visibility</i>
+                  Repetition
+                </button>
+                <button class="px-3 py-1 rounded-full text-xs text-orange-900 border border-orange-500 bg-transparent hover:bg-orange-100 transition-colors annotation-filter" data-type="filler">
+                  <i class="material-icons text-xs mr-1 align-text-top">visibility</i>
+                  Filler words
+                </button>
+                <button class="px-3 py-1 rounded-full text-xs text-gray-900 border border-gray-500 bg-transparent hover:bg-gray-100 transition-colors annotation-filter" data-type="all">
+                  <i class="material-icons text-xs mr-1 align-text-top">visibility</i>
+                  All
+                </button>
               </div>
             </div>
           </div>
@@ -212,9 +205,6 @@
       
       <!-- Right sidebar (Analysis Panel) -->
       <div id="rightSidebar" class="w-80 bg-neutral-lightest p-6 overflow-y-auto relative">
-        <!-- Resize handle for right sidebar -->
-        <div id="rightResizeHandle" class="absolute top-0 left-0 bottom-0 w-1 bg-transparent hover:bg-blue-400 cursor-col-resize z-10"></div>
-        
         <!-- Toggle button to hide sidebar -->
         <button id="toggleRightSidebar" class="absolute top-3 left-3 p-1.5 text-neutral-darker hover:text-primary z-20 rounded-full hover:bg-blue-50">
           <i class="material-icons">chevron_right</i>
@@ -223,21 +213,21 @@
         <div class="mb-5">
           <h3 class="text-lg mb-3">Speech Analysis</h3>
           <div class="flex border-b border-neutral-light">
-            <div class="tab active">Overview</div>
-            <div class="tab">Issues</div>
+            <div class="tab active" data-tab="overview">Overview</div>
+            <div class="tab" data-tab="issues">Issues</div>
           </div>
         </div>
         
-        <div>
+        <div id="overview-tab" class="tab-content active">
           <!-- Metrics -->
           <div class="flex space-x-4 mb-6">
             <div class="metric-card flex-1">
               <div class="text-sm text-neutral-darker mb-1">Total Issues</div>
-              <div class="text-2xl font-bold">12</div>
+              <div class="text-2xl font-bold">25</div>
             </div>
             <div class="metric-card flex-1">
               <div class="text-sm text-neutral-darker mb-1">Duration</div>
-              <div class="text-2xl font-bold">5:41</div>
+              <div class="text-2xl font-bold">1:17</div>
             </div>
           </div>
           
@@ -247,27 +237,27 @@
             
             <div class="space-y-2">
               <div class="flex items-center">
-                <div class="w-24 text-sm">Syllable</div>
+                <div class="w-24 text-sm">Pause</div>
                 <div class="flex-1 h-2.5 bg-neutral-lighter rounded-full mr-2 overflow-hidden">
-                  <div class="h-full bg-issue-mispronunciation rounded-full" style="width: 85%"></div>
+                  <div class="h-full bg-blue-400 rounded-full" style="width: 80%"></div>
                 </div>
-                <div class="text-sm font-medium">3</div>
+                <div class="text-sm font-medium">14</div>
               </div>
               
               <div class="flex items-center">
                 <div class="w-24 text-sm">Filler words</div>
                 <div class="flex-1 h-2.5 bg-neutral-lighter rounded-full mr-2 overflow-hidden">
-                  <div class="h-full bg-issue-filler rounded-full" style="width: 85%"></div>
+                  <div class="h-full bg-orange-400 rounded-full" style="width: 35%"></div>
                 </div>
-                <div class="text-sm font-medium">3</div>
+                <div class="text-sm font-medium">6</div>
               </div>
               
               <div class="flex items-center">
-                <div class="w-24 text-sm">Grammar</div>
+                <div class="w-24 text-sm">Repetition</div>
                 <div class="flex-1 h-2.5 bg-neutral-lighter rounded-full mr-2 overflow-hidden">
-                  <div class="h-full bg-issue-grammar rounded-full" style="width: 65%"></div>
+                  <div class="h-full bg-amber-400 rounded-full" style="width: 25%"></div>
                 </div>
-                <div class="text-sm font-medium">2</div>
+                <div class="text-sm font-medium">4</div>
               </div>
             </div>
           </div>
@@ -279,7 +269,82 @@
               <div class="text-4xl font-bold mr-1">100</div>
               <div class="text-neutral-darker">wpm</div>
             </div>
-            <div class="rate-quality">Good</div>
+            <div class="rate-quality bg-green-100 text-green-800">
+              Good
+            </div>
+          </div>
+        </div>
+        
+        <!-- Issues Tab Content -->
+        <div id="issues-tab" class="tab-content hidden">
+          <div class="flex flex-col h-full overflow-hidden">
+            <!-- Summary -->
+            <div class="bg-white rounded-lg p-5 shadow-card mb-6">
+              <h4 class="text-base mb-4 flex items-center">
+                <i class="material-icons text-neutral-darker mr-2" style="font-size: 20px;">analytics</i>
+                <span>Issue Summary</span>
+              </h4>
+              
+              <div class="space-y-4">
+                <!-- Pauses -->
+                <div class="issue-summary-item hover:bg-blue-50 border border-transparent hover:border-blue-100 rounded-lg transition-all">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-blue-400 rounded-full mr-2"></div>
+                      <span class="font-medium text-blue-800">Pauses</span>
+                    </div>
+                    <div class="text-lg font-bold text-blue-700 bg-blue-50 px-3 py-0.5 rounded-full">14</div>
+                  </div>
+                  <div class="text-xs text-neutral-darker">
+                    Pauses over 0.5 seconds that interrupt the flow of speech
+                  </div>
+                </div>
+                
+                <!-- Filler Words -->
+                <div class="issue-summary-item hover:bg-orange-50 border border-transparent hover:border-orange-100 rounded-lg transition-all">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-orange-400 rounded-full mr-2"></div>
+                      <span class="font-medium text-orange-800">Filler Words</span>
+                    </div>
+                    <div class="text-lg font-bold text-orange-700 bg-orange-50 px-3 py-0.5 rounded-full">6</div>
+                  </div>
+                  <div class="text-xs text-neutral-darker">
+                    Words like "um", "uh", "like" that don't add meaning
+                  </div>
+                </div>
+                
+                <!-- Repetitions -->
+                <div class="issue-summary-item hover:bg-amber-50 border border-transparent hover:border-amber-100 rounded-lg transition-all">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-amber-400 rounded-full mr-2"></div>
+                      <span class="font-medium text-amber-800">Repetitions</span>
+                    </div>
+                    <div class="text-lg font-bold text-amber-700 bg-amber-50 px-3 py-0.5 rounded-full">4</div>
+                  </div>
+                  <div class="text-xs text-neutral-darker">
+                    Repeated words, phrases or syllables
+                  </div>
+                </div>
+                
+                <!-- Mispronunciations -->
+                <div class="issue-summary-item hover:bg-purple-50 border border-transparent hover:border-purple-100 rounded-lg transition-all">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-purple-400 rounded-full mr-2"></div>
+                      <span class="font-medium text-purple-800">Mispronunciations</span>
+                    </div>
+                    <div class="text-lg font-bold text-purple-700 bg-purple-50 px-3 py-0.5 rounded-full">1</div>
+                  </div>
+                  <div class="text-xs text-neutral-darker">
+                    Words that were pronounced incorrectly
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            
           </div>
         </div>
       </div>
@@ -316,6 +381,69 @@
         <input type="file" id="audioFile" accept="audio/*" class="w-full mb-5" />
         <button type="submit" class="btn btn-primary w-full py-2.5">Upload</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Grammar Annotation Modal -->
+  <div id="annotationModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="modal-content w-[500px] max-w-full">
+      <div class="flex justify-between items-center mb-5">
+        <h3 class="text-lg font-semibold">Grammar Annotation</h3>
+        <button id="closeAnnotationModal" class="text-neutral-dark hover:text-black">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-2">Original Text</label>
+        <div class="p-3 bg-neutral-lightest rounded border border-neutral-light text-sm">
+          <span class="highlight highlight-grammar">dog's</span> the <span class="highlight highlight-grammar">dog</span> sandcastle
+        </div>
+      </div>
+      
+      <div class="mb-5">
+        <label for="correctedText" class="block text-sm font-medium mb-2">Correction</label>
+        <textarea id="correctedText" rows="3" class="w-full p-3 border border-neutral-light rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Enter corrected text...">dog's sandcastle</textarea>
+      </div>
+      
+      <div class="mb-5">
+        <label for="annotationType" class="block text-sm font-medium mb-2">Type</label>
+        <select id="annotationType" class="w-full p-3 border border-neutral-light rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+          <option value="grammar">Grammar Error</option>
+          <option value="mispronunciation">Mispronunciation</option>
+          <option value="repetition">Repetition</option>
+          <option value="filler">Filler Word</option>
+        </select>
+      </div>
+      
+      <div class="flex justify-end gap-3">
+        <button id="cancelAnnotation" class="btn btn-secondary py-2 px-4">Cancel</button>
+        <button id="saveAnnotation" class="btn btn-primary py-2 px-4">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotation Detail Popup -->
+  <div id="annotationDetailPopup" class="fixed hidden p-3 bg-white rounded-lg shadow-lg z-50" style="min-width: 200px;">
+    <div class="flex justify-between items-center mb-2">
+      <h4 class="text-sm font-medium" id="annotationDetailType">Pause</h4>
+      <button id="closeAnnotationDetail" class="text-neutral-dark hover:text-black text-xs">
+        <i class="material-icons" style="font-size: 16px;">close</i>
+      </button>
+    </div>
+    <div class="text-xs space-y-1">
+      <div class="flex justify-between">
+        <span class="text-neutral-darker">Start:</span>
+        <span id="annotationDetailStart" class="font-medium">00:05.2</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-neutral-darker">End:</span>
+        <span id="annotationDetailEnd" class="font-medium">00:07.2</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-neutral-darker">Duration:</span>
+        <span id="annotationDetailDuration" class="font-medium">2.0s</span>
+      </div>
     </div>
   </div>
 
