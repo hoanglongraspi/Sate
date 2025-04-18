@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SATE - Speech Analysis Tool and Evaluator</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="bg-neutral-lightest">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Left Sidebar -->
+    <div id="leftSidebar" class="w-60 bg-white shadow-md flex flex-col overflow-hidden transition-all duration-300 relative">
+      <!-- Resize handle for left sidebar -->
+      <div id="leftResizeHandle" class="absolute top-0 right-0 bottom-0 w-1 bg-transparent hover:bg-blue-400 cursor-col-resize z-10"></div>
+      
+      <!-- Toggle button to hide sidebar -->
+      <button id="toggleLeftSidebar" class="absolute top-3 right-3 p-1 text-neutral-darker hover:text-primary z-20">
+        <i class="material-icons">chevron_left</i>
+      </button>
+      
+      <!-- Logo -->
+      <div class="p-5 text-center border-b border-neutral-light">
+        <h1 class="text-2xl text-neutral-darkest">SATE</h1>
+      </div>
+      
+      <!-- User Profile -->
+      <div class="flex items-center p-3 border-b border-neutral-light">
+        <div class="mr-2">
+          <img src="https://via.placeholder.com/40" alt="User Avatar" class="w-7 h-7 rounded-full">
+        </div>
+        <div class="font-medium flex-1">Sapphire</div>
+        <div class="text-neutral-darker">
+          <i class="material-icons text-sm">expand_more</i>
+        </div>
+      </div>
+      
+      <!-- Actions -->
+      <div class="flex p-4 border-b border-neutral-light">
+        <button id="recordBtn" class="btn btn-primary mr-2 flex-1">
+          <i class="material-icons text-lg mr-1">mic</i> Record
+        </button>
+        <button id="importBtn" class="btn btn-secondary flex-1">
+          <i class="material-icons text-lg mr-1">file_upload</i> Import
+        </button>
+      </div>
+      
+      <!-- Notes List -->
+      <div class="flex-1 overflow-y-auto">
+        <div class="py-2 px-5 text-xs text-neutral-darker bg-neutral-lightest">Sat, 12 Apr</div>
+        <div class="note-item active">
+          <div class="font-medium">Note 1</div>
+          <div class="text-xs text-neutral-darker">10:15 PM · 35 min</div>
+        </div>
+        <div class="note-item">
+          <div class="font-medium">Note 2</div>
+          <div class="text-xs text-neutral-darker">10:47 PM · 12 min</div>
+        </div>
+        
+        <% for (let i = 0; i < 3; i++) { %>
+          <div class="py-2 px-5 text-xs text-neutral-darker bg-neutral-lightest">Sat, 12 Apr</div>
+          <div class="note-item">
+            <div class="font-medium">Note 1</div>
+            <div class="text-xs text-neutral-darker">10:15 PM · 35 min</div>
+          </div>
+          <div class="note-item">
+            <div class="font-medium">Note 2</div>
+            <div class="text-xs text-neutral-darker">10:47 PM · 12 min</div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+    
+    <!-- Left sidebar toggle button (shown when sidebar is hidden) -->
+    <div id="showLeftSidebar" class="hidden absolute top-3 left-3 z-30 bg-white rounded-full shadow-md">
+      <button class="p-1 text-neutral-darker hover:text-primary">
+        <i class="material-icons">chevron_right</i>
+      </button>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Note Detail -->
+      <div class="flex-2 relative flex flex-col overflow-hidden border-r border-neutral-light">
+        <!-- Note Header -->
+        <div class="p-6 pb-4">
+          <h2 class="text-xl mb-2">Note 1</h2>
+          <div class="flex text-sm text-neutral-darker">
+            <span class="flex items-center mr-5">
+              <i class="material-icons text-sm mr-1">event</i> April 12, 2025
+            </span>
+            <span class="flex items-center mr-5">
+              <i class="material-icons text-sm mr-1">schedule</i> 5 min 41 sec
+            </span>
+            <span class="flex items-center">
+              <i class="material-icons text-sm mr-1">people</i> 2 people
+            </span>
+          </div>
+        </div>
+        
+        <!-- Scrollable Conversation -->
+        <div class="flex-1 overflow-y-auto px-6 pb-36">
+          <div class="space-y-5 mb-6">
+            <!-- Doctor message -->
+            <div class="relative">
+              <div class="font-medium mb-1">Doctor</div>
+              <div class="message-bubble doctor">
+                So, how have your classes been going this semester?
+              </div>
+              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="material-icons text-neutral-dark">edit</i>
+              </div>
+            </div>
+            
+            <!-- Patient message -->
+            <div class="relative">
+              <div class="font-medium mb-1">Patient</div>
+              <div class="message-bubble patient">
+                Um, it's been... okay, I guess. I've had some trouble with, uh, communimacation—communication in presentations.
+              </div>
+              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="material-icons text-neutral-dark">edit</i>
+              </div>
+            </div>
+            
+            <!-- Doctor message -->
+            <div class="relative">
+              <div class="font-medium mb-1">Doctor</div>
+              <div class="message-bubble doctor">
+                Presentations? Can you explain more?
+              </div>
+              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="material-icons text-neutral-dark">edit</i>
+              </div>
+            </div>
+            
+            <!-- Patient message with highlights -->
+            <div class="relative">
+              <div class="font-medium mb-1">Patient</div>
+              <div class="message-bubble patient">
+                Yeah, like... when I speak, sometimes I <span class="highlight highlight-repetition">say the same thing again, I say the same thing again</span> without noticing. And I pause a lot. Like I'll be mid-sentence and just...<span class="highlight highlight-pause">stop</span>...and, <span class="highlight highlight-filler">uh</span>....yeah.
+              </div>
+              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="material-icons text-neutral-dark">edit</i>
+              </div>
+            </div>
+            
+            <!-- Doctor message -->
+            <div class="relative">
+              <div class="font-medium mb-1">Doctor</div>
+              <div class="message-bubble doctor">
+                That sounds stressful. Anything else?
+              </div>
+              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="material-icons text-neutral-dark">edit</i>
+              </div>
+            </div>
+            
+            <!-- Patient message with highlights -->
+            <div class="relative">
+              <div class="font-medium mb-1">Patient</div>
+              <div class="message-bubble patient">
+                I also get stuck on <span class="highlight highlight-stuttering">w-w-w-words</span> sometimes. Especially when I'm nervous. And my grammar's weird when I'm under pressure—like I'll say things like, <span class="highlight highlight-grammar">"He don't know what happened"</span> instead of the right way.
+              </div>
+              <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="material-icons text-neutral-dark">edit</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sticky Audio Controls -->
+        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-lg mx-4 mb-4 shadow-lg overflow-hidden audio-control-bar" style="box-shadow: 0 8px 16px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;">
+          <div class="px-4 py-4">
+            <!-- Timeline -->
+            <div class="flex items-center justify-between mb-4 relative">
+              <span class="text-xs text-neutral-darker">2:16</span>
+              <div class="relative flex-1 mx-3 h-1 bg-neutral-light rounded-full overflow-hidden">
+                <div class="absolute inset-0 rounded-full audio-progress-indicator" style="width: 40%;"></div>
+                <div class="audio-progress-handle" style="left: 40%;"></div>
+              </div>
+              <span class="text-xs text-neutral-darker">5:41</span>
+            </div>
+            
+            <!-- Control buttons and tags -->
+            <div class="flex justify-between items-center">
+              <!-- Control buttons -->
+              <div class="flex gap-1 items-center">
+                <button class="p-1 text-neutral-dark hover:text-black transition-colors">
+                  <i class="material-icons text-sm">skip_previous</i>
+                </button>
+                <button class="flex items-center justify-center w-8 h-8 bg-neutral-darkest text-white rounded-full hover:bg-black shadow-sm transition-all hover:shadow-md">
+                  <i class="material-icons text-lg">play_arrow</i>
+                </button>
+                <button class="p-1 text-neutral-dark hover:text-black transition-colors">
+                  <i class="material-icons text-sm">skip_next</i>
+                </button>
+              </div>
+              
+              <!-- Tags -->
+              <div class="flex flex-wrap gap-1">
+                <span class="px-3 py-1 rounded-full text-xs bg-purple-200 text-purple-900">Mispronunciation</span>
+                <span class="px-3 py-1 rounded-full text-xs bg-emerald-100 text-emerald-900">Grammar</span>
+                <span class="px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-900">Pauses</span>
+                <span class="px-3 py-1 rounded-full text-xs bg-amber-200 text-amber-900">Repetition</span>
+                <span class="px-3 py-1 rounded-full text-xs bg-orange-200 text-orange-900">Filler words</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right sidebar (Analysis Panel) -->
+      <div id="rightSidebar" class="w-80 bg-neutral-lightest p-6 overflow-y-auto relative">
+        <!-- Resize handle for right sidebar -->
+        <div id="rightResizeHandle" class="absolute top-0 left-0 bottom-0 w-1 bg-transparent hover:bg-blue-400 cursor-col-resize z-10"></div>
+        
+        <!-- Toggle button to hide sidebar -->
+        <button id="toggleRightSidebar" class="absolute top-3 left-3 p-1 text-neutral-darker hover:text-primary z-20">
+          <i class="material-icons">chevron_right</i>
+        </button>
+        
+        <div class="mb-5">
+          <h3 class="text-lg mb-3">Speech Analysis</h3>
+          <div class="flex border-b border-neutral-light">
+            <div class="tab active">Overview</div>
+            <div class="tab">Issues</div>
+          </div>
+        </div>
+        
+        <div>
+          <!-- Metrics -->
+          <div class="flex space-x-4 mb-6">
+            <div class="metric-card flex-1">
+              <div class="text-sm text-neutral-darker mb-1">Total Issues</div>
+              <div class="text-2xl font-bold">12</div>
+            </div>
+            <div class="metric-card flex-1">
+              <div class="text-sm text-neutral-darker mb-1">Duration</div>
+              <div class="text-2xl font-bold">5:41</div>
+            </div>
+          </div>
+          
+          <!-- Top Issues -->
+          <div class="bg-white rounded-lg p-5 shadow-card mb-6">
+            <h4 class="text-base mb-3">Top Issues</h4>
+            
+            <div class="space-y-2">
+              <div class="flex items-center">
+                <div class="w-24 text-sm">Syllable</div>
+                <div class="flex-1 h-2.5 bg-neutral-lighter rounded-full mr-2 overflow-hidden">
+                  <div class="h-full bg-issue-mispronunciation rounded-full" style="width: 85%"></div>
+                </div>
+                <div class="text-sm font-medium">3</div>
+              </div>
+              
+              <div class="flex items-center">
+                <div class="w-24 text-sm">Filler words</div>
+                <div class="flex-1 h-2.5 bg-neutral-lighter rounded-full mr-2 overflow-hidden">
+                  <div class="h-full bg-issue-filler rounded-full" style="width: 85%"></div>
+                </div>
+                <div class="text-sm font-medium">3</div>
+              </div>
+              
+              <div class="flex items-center">
+                <div class="w-24 text-sm">Grammar</div>
+                <div class="flex-1 h-2.5 bg-neutral-lighter rounded-full mr-2 overflow-hidden">
+                  <div class="h-full bg-issue-grammar rounded-full" style="width: 65%"></div>
+                </div>
+                <div class="text-sm font-medium">2</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Speech Rate -->
+          <div class="bg-white rounded-lg p-5 text-center shadow-card">
+            <h4 class="text-base mb-3">Speech rate</h4>
+            <div class="flex items-baseline justify-center mb-1">
+              <div class="text-4xl font-bold mr-1">100</div>
+              <div class="text-neutral-darker">wpm</div>
+            </div>
+            <div class="rate-quality">Good</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right sidebar toggle button (shown when sidebar is hidden) -->
+      <div id="showRightSidebar" class="hidden absolute top-3 right-3 z-30 bg-white rounded-full shadow-md">
+        <button class="p-1 text-neutral-darker hover:text-primary">
+          <i class="material-icons">chevron_left</i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recording Modal -->
+  <div id="recordingModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="modal-content">
+      <h3 class="text-lg font-semibold mb-5">Recording</h3>
+      <div class="h-24 bg-neutral-lighter rounded-lg mb-4 flex items-center justify-center">
+        <div id="waveform" class="w-4/5 h-14" style="background-image: linear-gradient(90deg, #5d6cfa 1px, transparent 1px), linear-gradient(90deg, rgba(93, 108, 250, 0.5) 1px, transparent 1px); background-size: 10px 100%, 5px 100%;"></div>
+      </div>
+      <div class="text-center text-3xl font-bold mb-4 recording-time">00:00</div>
+      <div class="flex justify-center">
+        <button id="stopRecording" class="btn btn-danger mx-2 py-2 px-5 rounded-full">Stop</button>
+        <button id="pauseRecording" class="btn btn-secondary mx-2 py-2 px-5 rounded-full">Pause</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Modal -->
+  <div id="uploadModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="modal-content">
+      <h3 class="text-lg font-semibold mb-5">Import Audio</h3>
+      <form id="uploadForm" class="mt-4">
+        <input type="file" id="audioFile" accept="audio/*" class="w-full mb-5" />
+        <button type="submit" class="btn btn-primary w-full py-2.5">Upload</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html> 
