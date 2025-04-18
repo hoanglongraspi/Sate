@@ -4,10 +4,6 @@ const socket = io();
 // DOM Elements
 const recordBtn = document.getElementById('recordBtn');
 const importBtn = document.getElementById('importBtn');
-const emptyStateRecordBtn = document.getElementById('emptyStateRecordBtn');
-const emptyStateImportBtn = document.getElementById('emptyStateImportBtn');
-const initialEmptyState = document.getElementById('initialEmptyState');
-const contentArea = document.getElementById('contentArea');
 const recordingModal = document.getElementById('recordingModal');
 const uploadModal = document.getElementById('uploadModal');
 const stopRecordingBtn = document.getElementById('stopRecording');
@@ -81,8 +77,6 @@ try {
 // Event Listeners
 recordBtn.addEventListener('click', startRecording);
 importBtn.addEventListener('click', showImportModal);
-emptyStateRecordBtn && emptyStateRecordBtn.addEventListener('click', startRecording);
-emptyStateImportBtn && emptyStateImportBtn.addEventListener('click', showImportModal);
 stopRecordingBtn.addEventListener('click', stopRecording);
 pauseRecordingBtn.addEventListener('click', pauseRecording);
 uploadForm.addEventListener('submit', handleUpload);
@@ -404,29 +398,55 @@ tabs.forEach(tab => {
 
 // Recording functions
 function startRecording() {
-  recordingModal.classList.remove('hidden');
-  recordingModal.classList.add('flex');
-  
-  // Show recording in progress
-  isRecording = true;
-  recordingSeconds = 0;
-  updateRecordingTime();
-  
-  // Fake recording for 3 seconds
-  recordingInterval = setInterval(() => {
-    recordingSeconds++;
-    updateRecordingTime();
-    
-    // After 3 seconds, stop "recording" and show content
-    if (recordingSeconds >= 3) {
-      stopRecording();
-      showContent();
-    }
-  }, 1000);
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        // Show modal
+        recordingModal.classList.remove('hidden');
+        recordingModal.classList.add('flex');
+        
+        isRecording = true;
+        recordingSeconds = 0;
+        updateRecordingTime();
+        
+        // Start recording timer
+        recordingInterval = setInterval(() => {
+          recordingSeconds++;
+          updateRecordingTime();
+        }, 1000);
+        
+        // Create MediaRecorder
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = event => {
+          audioChunks.push(event.data);
+        };
+        
+        mediaRecorder.onstop = () => {
+          // Create blob from recorded chunks
+          audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          
+          // Send to server for analysis
+          sendAudioForAnalysis(audioBlob);
+        };
+        
+        // Start recording
+        mediaRecorder.start();
+        animateRecording();
+      })
+      .catch(err => {
+        console.error('Error accessing microphone:', err);
+        alert('Could not access your microphone. Please check permissions.');
+      });
+  } else {
+    alert('Your browser does not support audio recording.');
+  }
 }
 
 function stopRecording() {
-  if (isRecording) {
+  if (isRecording && mediaRecorder) {
+    mediaRecorder.stop();
     isRecording = false;
     clearInterval(recordingInterval);
     
@@ -494,105 +514,509 @@ function handleUpload(e) {
     return;
   }
   
-  // Hide upload modal
-  uploadModal.classList.add('hidden');
-  uploadModal.classList.remove('flex');
+  const file = audioFile.files[0];
+  const formData = new FormData();
+  formData.append('audio', file);
   
   // Show loading state
-  const loadingIndicator = document.createElement('div');
-  loadingIndicator.id = 'loadingIndicator';
-  loadingIndicator.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
-  loadingIndicator.innerHTML = `
-    <div class="bg-white p-8 rounded-lg shadow-lg text-center">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-      <p class="text-lg text-neutral-darkest">Analyzing speech patterns...</p>
-    </div>
-  `;
-  document.body.appendChild(loadingIndicator);
+  const submitBtn = uploadForm.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = 'Uploading...';
+  submitBtn.disabled = true;
   
-  // Simulate processing delay and transition to content
-  setTimeout(() => {
-    // Remove loading indicator
-    document.getElementById('loadingIndicator')?.remove();
-    
-    // Transition from empty state to content
-    showContent();
-  }, 2000);
+  fetch('/upload', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Send to server for analysis
+      sendAudioForAnalysis(file);
+      uploadModal.classList.add('hidden');
+      uploadModal.classList.remove('flex');
+    } else {
+      alert('Upload failed.');
+    }
+  })
+  .catch(err => {
+    console.error('Error uploading file:', err);
+    alert('Error uploading file. Please try again.');
+  })
+  .finally(() => {
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+  });
 }
 
-// Function to transition from empty state to content
-function showContent() {
-  // Hide empty state
-  initialEmptyState.classList.add('hidden');
+// Analysis functions
+function sendAudioForAnalysis(audioData) {
+  socket.emit('analyze-speech', audioData);
   
-  // Show content area
-  contentArea.classList.remove('hidden');
-  contentArea.classList.add('flex');
+  // Show loading state - you could add a loading indicator here
   
-  // Make the left sidebar visible
-  const leftSidebar = document.getElementById('leftSidebar');
-  if (leftSidebar) {
-    leftSidebar.classList.remove('hidden');
-    leftSidebar.style.width = '15rem';
-    leftSidebar.classList.remove('sidebar-collapsed');
+  // Listen for analysis results
+  socket.once('analysis-results', handleAnalysisResults);
+}
+
+function handleAnalysisResults(results) {
+  console.log('Analysis results:', results);
+  
+  // Update metrics
+  document.querySelector('.metric-card:nth-child(1) .text-2xl').textContent = results.totalIssues || '25';
+  document.querySelector('.metric-card:nth-child(2) .text-2xl').textContent = results.duration || '1:17';
+  
+  const speechRateElement = document.querySelector('.bg-white.rounded-lg.p-5.text-center .text-4xl');
+  const rateQualityElement = document.querySelector('.rate-quality');
+  
+  if (speechRateElement) {
+    speechRateElement.textContent = results.speechRate || '100';
+  }
+  
+  if (rateQualityElement) {
+    // Set quality indicator based on speech rate
+    const speechRate = results.speechRate || 100;
+    let qualityText = 'Average';
+    let qualityClass = 'bg-yellow-100 text-yellow-800';
     
-    // Hide the show button if it's visible
-    const showLeftSidebar = document.getElementById('showLeftSidebar');
-    if (showLeftSidebar) {
-      showLeftSidebar.classList.add('hidden');
-      showLeftSidebar.classList.remove('flex');
+    if (speechRate > 90 && speechRate < 110) {
+      qualityText = 'Good';
+      qualityClass = 'bg-green-100 text-green-800';
+    } else if (speechRate >= 110) {
+      qualityText = 'Fast';
+      qualityClass = 'bg-blue-100 text-blue-800';
+    } else if (speechRate <= 70) {
+      qualityText = 'Slow';
+      qualityClass = 'bg-red-100 text-red-800';
+    }
+    
+    rateQualityElement.textContent = qualityText;
+    rateQualityElement.className = `rate-quality ${qualityClass}`;
+  }
+  
+  // Update issue counts
+  if (results.issues) {
+    const pauseCount = results.issues.find(i => i.type === 'Pauses')?.count || 14;
+    const fillerCount = results.issues.find(i => i.type === 'Filler words')?.count || 6;
+    const repetitionCount = results.issues.find(i => i.type === 'Repetition')?.count || 4;
+    
+    // Update progress bars
+    const totalIssues = pauseCount + fillerCount + repetitionCount;
+    
+    // Pause progress
+    const pauseBar = document.querySelector('.space-y-2 .flex:nth-child(1) .flex-1 .h-full');
+    const pauseCount_el = document.querySelector('.space-y-2 .flex:nth-child(1) .text-sm.font-medium');
+    if (pauseBar && pauseCount_el) {
+      pauseBar.style.width = `${(pauseCount / totalIssues) * 100}%`;
+      pauseCount_el.textContent = pauseCount;
+    }
+    
+    // Filler words progress
+    const fillerBar = document.querySelector('.space-y-2 .flex:nth-child(2) .flex-1 .h-full');
+    const fillerCount_el = document.querySelector('.space-y-2 .flex:nth-child(2) .text-sm.font-medium');
+    if (fillerBar && fillerCount_el) {
+      fillerBar.style.width = `${(fillerCount / totalIssues) * 100}%`;
+      fillerCount_el.textContent = fillerCount;
+    }
+    
+    // Repetition progress
+    const repetitionBar = document.querySelector('.space-y-2 .flex:nth-child(3) .flex-1 .h-full');
+    const repetitionCount_el = document.querySelector('.space-y-2 .flex:nth-child(3) .text-sm.font-medium');
+    if (repetitionBar && repetitionCount_el) {
+      repetitionBar.style.width = `${(repetitionCount / totalIssues) * 100}%`;
+      repetitionCount_el.textContent = repetitionCount;
+    }
+  }
+}
+
+// Annotation functions
+function showAnnotationModal() {
+  // Get current selection if any, otherwise use default example
+  const selection = window.getSelection();
+  const selectedText = selection.toString().trim();
+  
+  // Update the modal with the selected text
+  const originalTextElement = document.querySelector('#annotationModal .p-3.bg-neutral-lightest');
+  
+  if (selectedText) {
+    selectedTextForAnnotation = {
+      text: selectedText,
+      range: selection.getRangeAt(0).cloneRange()
+    };
+    originalTextElement.textContent = selectedText;
+    correctedText.value = selectedText; // Start with the selected text
+  }
+  
+  // Show the modal
+  annotationModal.classList.remove('hidden');
+  annotationModal.classList.add('flex');
+}
+
+function hideAnnotationModal() {
+  annotationModal.classList.add('hidden');
+  annotationModal.classList.remove('flex');
+  selectedTextForAnnotation = null;
+}
+
+function handleSaveAnnotation() {
+  const correction = correctedText.value.trim();
+  const type = annotationType.value;
+  
+  if (!correction) {
+    alert('Please enter a correction.');
+    return;
+  }
+  
+  if (selectedTextForAnnotation) {
+    // Create a span element for the corrected text
+    const span = document.createElement('span');
+    span.className = `highlight highlight-${type}`;
+    span.textContent = correction;
+    span.title = `Original: ${selectedTextForAnnotation.text}`;
+    
+    // If we have a selected range, replace it with our new element
+    const range = selectedTextForAnnotation.range;
+    range.deleteContents();
+    range.insertNode(span);
+    
+    // Update the total issue count
+    const totalIssuesElement = document.querySelector('.metric-card:nth-child(1) .text-2xl');
+    if (totalIssuesElement) {
+      const currentCount = parseInt(totalIssuesElement.textContent);
+      totalIssuesElement.textContent = (currentCount + 1).toString();
+    }
+    
+    // Update the issue count for the specific type
+    updateIssueCount(type);
+  } else {
+    // If no selection, just close the modal
+    console.log('No text selected for annotation');
+  }
+  
+  // Close the modal
+  hideAnnotationModal();
+}
+
+function updateIssueCount(type) {
+  // Map the type to the corresponding element
+  let countElement;
+  
+  switch (type) {
+    case 'grammar':
+      countElement = document.querySelector('.space-y-2 .flex:nth-child(3) .text-sm.font-medium');
+      break;
+    case 'filler':
+      countElement = document.querySelector('.space-y-2 .flex:nth-child(2) .text-sm.font-medium');
+      break;
+    case 'repetition':
+      countElement = document.querySelector('.space-y-2 .flex:nth-child(3) .text-sm.font-medium');
+      break;
+    case 'mispronunciation':
+      // We don't have a specific element for this in the top issues, could add one
+      break;
+  }
+  
+  if (countElement) {
+    const currentCount = parseInt(countElement.textContent);
+    countElement.textContent = (currentCount + 1).toString();
+    
+    // Also update the progress bar
+    const bar = countElement.previousElementSibling.querySelector('.h-full');
+    if (bar) {
+      // Recalculate percentages based on new values
+      const pauseCount = parseInt(document.querySelector('.space-y-2 .flex:nth-child(1) .text-sm.font-medium')?.textContent || '14');
+      const fillerCount = parseInt(document.querySelector('.space-y-2 .flex:nth-child(2) .text-sm.font-medium')?.textContent || '6');
+      const repetitionCount = parseInt(document.querySelector('.space-y-2 .flex:nth-child(3) .text-sm.font-medium')?.textContent || '4');
+      
+      const totalCount = pauseCount + fillerCount + repetitionCount;
+      
+      document.querySelector('.space-y-2 .flex:nth-child(1) .flex-1 .h-full').style.width = `${Math.round((pauseCount / totalCount) * 100)}%`;
+      document.querySelector('.space-y-2 .flex:nth-child(2) .flex-1 .h-full').style.width = `${Math.round((fillerCount / totalCount) * 100)}%`;
+      document.querySelector('.space-y-2 .flex:nth-child(3) .flex-1 .h-full').style.width = `${Math.round((repetitionCount / totalCount) * 100)}%`;
+    }
+  }
+}
+
+// Process speech text and add highlighting
+function processSpeechText(text, issues) {
+  if (!text || !issues) return text;
+  
+  let processedText = text;
+  
+  // Calculate total duration for timestamp positioning
+  const totalDuration = calculateTotalDuration(issues);
+  
+  // Process fillers
+  if (issues.fillers && issues.fillers.length > 0) {
+    issues.fillers.forEach((word, index) => {
+      const regex = new RegExp(`\\b${word.text}\\b`, 'gi');
+      processedText = processedText.replace(regex, `<span class="highlight highlight-filler filler${index+1}" data-timestamp="${word.start}:${word.end}" data-type="filler">${word.text}</span>`);
+    });
+  }
+  
+  // Process repetitions
+  if (issues.repetitions && issues.repetitions.length > 0) {
+    issues.repetitions.forEach((repetition, index) => {
+      const regex = new RegExp(`\\b${repetition.text}\\b`, 'gi');
+      processedText = processedText.replace(regex, `<span class="highlight highlight-repetition repetition${index+1}" data-timestamp="${repetition.start}:${repetition.end}" data-type="repetition">${repetition.text}</span>`);
+    });
+  }
+  
+  // Process mispronunciations
+  if (issues.mispronunciation && issues.mispronunciation.length > 0) {
+    issues.mispronunciation.forEach((word, index) => {
+      const regex = new RegExp(`\\b${word.text}\\b`, 'gi');
+      processedText = processedText.replace(regex, `<span class="highlight highlight-mispronunciation mispronunciation${index+1}" data-timestamp="${word.start}:${word.end}" data-type="mispronunciation">${word.text}</span>`);
+    });
+  }
+  
+  // Process grammar issues
+  if (issues.grammar && issues.grammar.length > 0) {
+    issues.grammar.forEach((word, index) => {
+      const regex = new RegExp(`\\b${word.text}\\b`, 'gi');
+      processedText = processedText.replace(regex, `<span class="highlight highlight-grammar grammar${index+1}" data-timestamp="${word.start}:${word.end}" data-type="grammar">${word.text}</span>`);
+    });
+  }
+  
+  // Process pauses
+  if (issues.pauses && issues.pauses.length > 0) {
+    // Sort pauses by start time
+    const sortedPauses = [...issues.pauses].sort((a, b) => a.start - b.start);
+    
+    // Calculate suitable positions for pauses
+    const textChunks = processedText.split('. '); // Split by sentence
+    
+    // If we have more pauses than sentences, some will be placed after spaces
+    let currentPosition = 0;
+    let positions = [];
+    
+    // First, try to place pauses after sentences
+    for (let i = 0; i < textChunks.length - 1 && i < sortedPauses.length; i++) {
+      currentPosition += textChunks[i].length + 2; // +2 for the '. '
+      positions.push(currentPosition - 1); // -1 to place right after the period
+    }
+    
+    // If we need more positions, try to place after spaces
+    if (positions.length < sortedPauses.length) {
+      const words = processedText.split(' ');
+      currentPosition = 0;
+      
+      for (let i = 0; i < words.length - 1 && positions.length < sortedPauses.length; i++) {
+        currentPosition += words[i].length + 1; // +1 for the space
+        // Skip if this position is already after a sentence
+        if (!positions.includes(currentPosition - 1)) {
+          positions.push(currentPosition);
+        }
+      }
+    }
+    
+    // Ensure positions are sorted and unique
+    positions = [...new Set(positions)].sort((a, b) => a - b);
+    
+    // Limit positions to the number of pauses we have
+    positions = positions.slice(0, sortedPauses.length);
+    
+    // Insert pauses at the calculated positions
+    // Insert from end to beginning to avoid changing positions
+    for (let i = positions.length - 1; i >= 0; i--) {
+      const pause = sortedPauses[i];
+      const pauseElement = `<span class="highlight highlight-pause pause${i+1}" data-timestamp="${pause.start}:${pause.end}" data-type="pause">...</span>`;
+      
+      const position = positions[i];
+      if (position < processedText.length) {
+        processedText = processedText.substring(0, position) + 
+                        pauseElement + 
+                        processedText.substring(position);
+      }
     }
   }
   
-  // Load demo data
-  loadDemoData();
+  return processedText;
 }
 
-// Load demo data function
-function loadDemoData() {
-  console.log("Loading demo data...");
+function displayTranscript(transcript) {
+  const conversationContainer = document.querySelector('.flex-1.overflow-y-auto.px-6.pb-36 .space-y-5');
+  if (!conversationContainer || !transcript) return;
   
-  // Ensure audio player is properly set up for the sample audio
-  audioPlayer.currentTime = 0;
+  // Clear existing conversation
+  conversationContainer.innerHTML = '';
   
-  // Attach click handlers to all word timestamps
-  attachWordTimestampClickHandlers();
+  // Add each segment to the conversation
+  transcript.forEach(segment => {
+    const speakerType = segment.speaker.toLowerCase() === 'child' ? 'patient' : 'doctor';
+    const speakerName = segment.speaker.toLowerCase() === 'child' ? 'Patient' : 'Examiner';
+    const issueHighlightedText = speakerType === 'patient' ? processSpeechText(segment.text, segment) : segment.text;
+    
+    const segmentHTML = `
+      <div class="relative">
+        <div class="font-medium mb-1">${speakerName}</div>
+        <div class="message-bubble ${speakerType}">
+          ${issueHighlightedText}
+        </div>
+      </div>
+    `;
+    
+    conversationContainer.innerHTML += segmentHTML;
+  });
   
-  // For demo purposes, fake receiving analysis results
-  const demoResults = {
-    duration: '1:17',
-    totalIssues: 25,
-    speechRate: 100,
-    issues: [
-      {type: 'Pauses', count: 14},
-      {type: 'Filler words', count: 6},
-      {type: 'Repetition', count: 4},
-      {type: 'Mispronunciation', count: 1}
-    ]
+  // Attach click handlers to newly added highlights
+  attachAnnotationClickHandlers();
+  
+  // Populate the Issues tab with the new highlights
+  populateIssueItems();
+}
+
+// Playback functions
+function togglePlayback() {
+  if (isPlaying) {
+    pausePlayback();
+  } else {
+    startPlayback();
+  }
+}
+
+function startPlayback() {
+  // Use the actual audio file in the sound directory
+  audioPlayer.currentTime = currentAudioTime;
+  
+  audioPlayer.onplay = () => {
+    isPlaying = true;
+    playBtn.innerHTML = '<i class="material-icons">pause</i>';
   };
   
-  // Update Note date and info
-  const noteDate = document.querySelector('.flex.items-center.mr-5:first-child');
-  if (noteDate) {
-    // Set today's date
-    const today = new Date();
-    const options = { month: 'long', day: 'numeric', year: 'numeric' };
-    noteDate.innerHTML = `<i class="material-icons text-sm mr-1">event</i> ${today.toLocaleDateString('en-US', options)}`;
+  audioPlayer.onpause = () => {
+    isPlaying = false;
+    playBtn.innerHTML = '<i class="material-icons">play_arrow</i>';
+    currentAudioTime = audioPlayer.currentTime;
+  };
+  
+  audioPlayer.onended = () => {
+    isPlaying = false;
+    playBtn.innerHTML = '<i class="material-icons">play_arrow</i>';
+    currentAudioTime = 0;
+    updateProgressBar(0);
+    clearActiveHighlights();
+  };
+  
+  audioPlayer.ontimeupdate = () => {
+    const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+    updateProgressBar(percent);
+    updateTimeDisplay();
+    highlightCurrentTranscriptSection();
+  };
+
+  // Load audio duration once it's available
+  audioPlayer.onloadedmetadata = () => {
+    updateTimeDisplay();
+  };
+  
+  audioPlayer.play();
+}
+
+function pausePlayback() {
+  audioPlayer.pause();
+}
+
+function seekAudio(e) {
+  const percent = (e.offsetX / progressBar.offsetWidth) * 100;
+  updateProgressBar(percent);
+  
+  audioPlayer.currentTime = (percent / 100) * audioPlayer.duration;
+  currentAudioTime = audioPlayer.currentTime;
+  updateTimeDisplay();
+}
+
+function updateProgressBar(percent) {
+  progressIndicator.style.width = `${percent}%`;
+  progressHandle.style.left = `${percent}%`;
+}
+
+// Function to update the time display
+function updateTimeDisplay() {
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  if (currentTimeEl) {
+    currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
   }
   
-  // Make a note appear active in the sidebar to complete the demo experience
-  const noteItems = document.querySelectorAll('.note-item');
-  if (noteItems.length > 0) {
-    noteItems.forEach(note => note.classList.remove('active'));
-    noteItems[0].classList.add('active');
+  if (durationEl) {
+    durationEl.textContent = formatTime(audioPlayer.duration);
+  }
+}
+
+// Show/hide modals when clicking outside
+window.addEventListener('click', (e) => {
+  if (e.target === recordingModal) {
+    // Don't close recording modal when clicking outside
+    // as it might be an accidental click
   }
   
-  setTimeout(() => {
-    handleAnalysisResults(demoResults);
+  if (e.target === uploadModal) {
+    uploadModal.classList.add('hidden');
+    uploadModal.classList.remove('flex');
+  }
+
+  if (e.target === annotationModal) {
+    hideAnnotationModal();
+  }
+});
+
+// Enable text selection in patient speech
+document.addEventListener('mouseup', () => {
+  const selection = window.getSelection();
+  if (selection.toString().trim() && selection.anchorNode) {
+    // Check if selection is within a patient message bubble
+    let containerElement = selection.anchorNode;
+    while (containerElement && containerElement.nodeName !== 'DIV') {
+      containerElement = containerElement.parentNode;
+    }
     
-    // Populate issues tab with items based on annotations
-    populateIssueItems();
-  }, 500);
+    if (containerElement && containerElement.classList.contains('patient')) {
+      // Make the annotate button more visible when text is selected
+      annotateBtn.classList.add('animate-pulse');
+      setTimeout(() => {
+        annotateBtn.classList.remove('animate-pulse');
+      }, 1500);
+    }
+  }
+});
+
+// Load saved sidebar state with improved animation
+function loadSidebarState() {
+  try {
+    // Load left sidebar state
+    const leftSidebarVisible = localStorage.getItem('leftSidebarVisible');
+    if (leftSidebarVisible === 'false') {
+      leftSidebar.style.width = '0px';
+      leftSidebar.classList.add('sidebar-collapsed');
+      showLeftSidebar.classList.remove('hidden');
+      showLeftSidebar.classList.add('flex');
+    } else {
+      // Ensure fixed width
+      leftSidebar.style.width = '15rem'; // 60 * 0.25 = 15rem
+    }
+    
+    // Load right sidebar state
+    const rightSidebarVisible = localStorage.getItem('rightSidebarVisible');
+    if (rightSidebarVisible === 'false') {
+      rightSidebar.style.width = '0px';
+      rightSidebar.classList.add('sidebar-collapsed');
+      showRightSidebar.classList.remove('hidden');
+      showRightSidebar.classList.add('flex');
+    } else {
+      // Ensure fixed width
+      rightSidebar.style.width = '20rem'; // 80 * 0.25 = 20rem
+    }
+  } catch (e) {
+    console.warn('Failed to load sidebar state from localStorage', e);
+    // Reset to defaults on error
+    leftSidebar.style.width = '15rem';
+    rightSidebar.style.width = '20rem';
+  }
 }
 
 // Initialize the app
@@ -631,11 +1055,17 @@ function init() {
   // Add click event listeners to all highlights for popup
   attachAnnotationClickHandlers();
   
+  // Add click event listeners to all word timestamps
+  attachWordTimestampClickHandlers();
+  
   // Add click event listeners to issue items
   attachIssueItemClickHandlers();
   
   // Add click event listeners to issue filters
   attachIssueFilterHandlers();
+  
+  // Populate issues tab with items based on annotations
+  populateIssueItems();
   
   // Load saved sidebar state
   loadSidebarState();
@@ -648,8 +1078,22 @@ function init() {
   // Preload audio for faster playback
   audioPlayer.load();
   
-  // Start in empty state - don't load demo data until user action
-  // loadDemoData();
+  // For demo purposes, fake receiving analysis results
+  const demoResults = {
+    duration: '1:17',
+    totalIssues: 25,
+    speechRate: 100,
+    issues: [
+      {type: 'Pauses', count: 14},
+      {type: 'Filler words', count: 6},
+      {type: 'Repetition', count: 4},
+      {type: 'Mispronunciation', count: 1}
+    ]
+  };
+  
+  setTimeout(() => {
+    handleAnalysisResults(demoResults);
+  }, 500);
 }
 
 // Initialize when DOM is loaded
@@ -1005,474 +1449,4 @@ function handleWordTimestampClick(e) {
     });
     this.classList.add('word-active');
   }
-}
-
-// Playback functions
-function togglePlayback() {
-  if (isPlaying) {
-    pausePlayback();
-  } else {
-    startPlayback();
-  }
-}
-
-function startPlayback() {
-  // Use the actual audio file in the sound directory
-  audioPlayer.currentTime = currentAudioTime;
-  
-  audioPlayer.onplay = () => {
-    isPlaying = true;
-    playBtn.innerHTML = '<i class="material-icons">pause</i>';
-  };
-  
-  audioPlayer.onpause = () => {
-    isPlaying = false;
-    playBtn.innerHTML = '<i class="material-icons">play_arrow</i>';
-    currentAudioTime = audioPlayer.currentTime;
-  };
-  
-  audioPlayer.onended = () => {
-    isPlaying = false;
-    playBtn.innerHTML = '<i class="material-icons">play_arrow</i>';
-    currentAudioTime = 0;
-    updateProgressBar(0);
-    clearActiveHighlights();
-  };
-  
-  audioPlayer.ontimeupdate = () => {
-    const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-    updateProgressBar(percent);
-    updateTimeDisplay();
-    highlightCurrentTranscriptSection();
-  };
-
-  // Load audio duration once it's available
-  audioPlayer.onloadedmetadata = () => {
-    updateTimeDisplay();
-  };
-  
-  audioPlayer.play();
-}
-
-function pausePlayback() {
-  audioPlayer.pause();
-}
-
-function seekAudio(e) {
-  const percent = (e.offsetX / progressBar.offsetWidth) * 100;
-  updateProgressBar(percent);
-  
-  audioPlayer.currentTime = (percent / 100) * audioPlayer.duration;
-  currentAudioTime = audioPlayer.currentTime;
-  updateTimeDisplay();
-}
-
-function updateProgressBar(percent) {
-  progressIndicator.style.width = `${percent}%`;
-  progressHandle.style.left = `${percent}%`;
-}
-
-// Function to update the time display
-function updateTimeDisplay() {
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-  
-  if (currentTimeEl) {
-    currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
-  }
-  
-  if (durationEl) {
-    durationEl.textContent = formatTime(audioPlayer.duration);
-  }
-}
-
-// Show/hide modals when clicking outside
-window.addEventListener('click', (e) => {
-  if (e.target === recordingModal) {
-    // Don't close recording modal when clicking outside
-    // as it might be an accidental click
-  }
-  
-  if (e.target === uploadModal) {
-    uploadModal.classList.add('hidden');
-    uploadModal.classList.remove('flex');
-  }
-
-  if (e.target === annotationModal) {
-    hideAnnotationModal();
-  }
-});
-
-// Enable text selection in patient speech
-document.addEventListener('mouseup', () => {
-  const selection = window.getSelection();
-  if (selection.toString().trim() && selection.anchorNode) {
-    // Check if selection is within a patient message bubble
-    let containerElement = selection.anchorNode;
-    while (containerElement && containerElement.nodeName !== 'DIV') {
-      containerElement = containerElement.parentNode;
-    }
-    
-    if (containerElement && containerElement.classList.contains('patient')) {
-      // Make the annotate button more visible when text is selected
-      annotateBtn.classList.add('animate-pulse');
-      setTimeout(() => {
-        annotateBtn.classList.remove('animate-pulse');
-      }, 1500);
-    }
-  }
-});
-
-// Load saved sidebar state with improved animation
-function loadSidebarState() {
-  try {
-    // Load left sidebar state
-    const leftSidebarVisible = localStorage.getItem('leftSidebarVisible');
-    if (leftSidebarVisible === 'false') {
-      leftSidebar.style.width = '0px';
-      leftSidebar.classList.add('sidebar-collapsed');
-      showLeftSidebar.classList.remove('hidden');
-      showLeftSidebar.classList.add('flex');
-    } else {
-      // Ensure fixed width
-      leftSidebar.style.width = '15rem'; // 60 * 0.25 = 15rem
-    }
-    
-    // Load right sidebar state
-    const rightSidebarVisible = localStorage.getItem('rightSidebarVisible');
-    if (rightSidebarVisible === 'false') {
-      rightSidebar.style.width = '0px';
-      rightSidebar.classList.add('sidebar-collapsed');
-      showRightSidebar.classList.remove('hidden');
-      showRightSidebar.classList.add('flex');
-    } else {
-      // Ensure fixed width
-      rightSidebar.style.width = '20rem'; // 80 * 0.25 = 20rem
-    }
-  } catch (e) {
-    console.warn('Failed to load sidebar state from localStorage', e);
-    // Reset to defaults on error
-    leftSidebar.style.width = '15rem';
-    rightSidebar.style.width = '20rem';
-  }
-}
-
-// Analysis functions
-function sendAudioForAnalysis(audioData) {
-  socket.emit('analyze-speech', audioData);
-  
-  // Show loading state - you could add a loading indicator here
-  
-  // Listen for analysis results
-  socket.once('analysis-results', handleAnalysisResults);
-}
-
-function handleAnalysisResults(results) {
-  console.log('Analysis results:', results);
-  
-  // Update metrics
-  document.querySelector('.metric-card:nth-child(1) .text-2xl').textContent = results.totalIssues || '25';
-  document.querySelector('.metric-card:nth-child(2) .text-2xl').textContent = results.duration || '1:17';
-  
-  const speechRateElement = document.querySelector('.bg-white.rounded-lg.p-5.text-center .text-4xl');
-  const rateQualityElement = document.querySelector('.rate-quality');
-  
-  if (speechRateElement) {
-    speechRateElement.textContent = results.speechRate || '100';
-  }
-  
-  if (rateQualityElement) {
-    // Set quality indicator based on speech rate
-    const speechRate = results.speechRate || 100;
-    let qualityText = 'Average';
-    let qualityClass = 'bg-yellow-100 text-yellow-800';
-    
-    if (speechRate > 90 && speechRate < 110) {
-      qualityText = 'Good';
-      qualityClass = 'bg-green-100 text-green-800';
-    } else if (speechRate >= 110) {
-      qualityText = 'Fast';
-      qualityClass = 'bg-blue-100 text-blue-800';
-    } else if (speechRate <= 70) {
-      qualityText = 'Slow';
-      qualityClass = 'bg-red-100 text-red-800';
-    }
-    
-    rateQualityElement.textContent = qualityText;
-    rateQualityElement.className = `rate-quality ${qualityClass}`;
-  }
-  
-  // Update issue counts
-  if (results.issues) {
-    const pauseCount = results.issues.find(i => i.type === 'Pauses')?.count || 14;
-    const fillerCount = results.issues.find(i => i.type === 'Filler words')?.count || 6;
-    const repetitionCount = results.issues.find(i => i.type === 'Repetition')?.count || 4;
-    
-    // Update progress bars
-    const totalIssues = pauseCount + fillerCount + repetitionCount;
-    
-    // Pause progress
-    const pauseBar = document.querySelector('.space-y-2 .flex:nth-child(1) .flex-1 .h-full');
-    const pauseCount_el = document.querySelector('.space-y-2 .flex:nth-child(1) .text-sm.font-medium');
-    if (pauseBar && pauseCount_el) {
-      pauseBar.style.width = `${(pauseCount / totalIssues) * 100}%`;
-      pauseCount_el.textContent = pauseCount;
-    }
-    
-    // Filler words progress
-    const fillerBar = document.querySelector('.space-y-2 .flex:nth-child(2) .flex-1 .h-full');
-    const fillerCount_el = document.querySelector('.space-y-2 .flex:nth-child(2) .text-sm.font-medium');
-    if (fillerBar && fillerCount_el) {
-      fillerBar.style.width = `${(fillerCount / totalIssues) * 100}%`;
-      fillerCount_el.textContent = fillerCount;
-    }
-    
-    // Repetition progress
-    const repetitionBar = document.querySelector('.space-y-2 .flex:nth-child(3) .flex-1 .h-full');
-    const repetitionCount_el = document.querySelector('.space-y-2 .flex:nth-child(3) .text-sm.font-medium');
-    if (repetitionBar && repetitionCount_el) {
-      repetitionBar.style.width = `${(repetitionCount / totalIssues) * 100}%`;
-      repetitionCount_el.textContent = repetitionCount;
-    }
-  }
-}
-
-// Annotation functions
-function showAnnotationModal() {
-  // Get current selection if any, otherwise use default example
-  const selection = window.getSelection();
-  const selectedText = selection.toString().trim();
-  
-  // Update the modal with the selected text
-  const originalTextElement = document.querySelector('#annotationModal .p-3.bg-neutral-lightest');
-  
-  if (selectedText) {
-    selectedTextForAnnotation = {
-      text: selectedText,
-      range: selection.getRangeAt(0).cloneRange()
-    };
-    originalTextElement.textContent = selectedText;
-    correctedText.value = selectedText; // Start with the selected text
-  }
-  
-  // Show the modal
-  annotationModal.classList.remove('hidden');
-  annotationModal.classList.add('flex');
-}
-
-function hideAnnotationModal() {
-  annotationModal.classList.add('hidden');
-  annotationModal.classList.remove('flex');
-  selectedTextForAnnotation = null;
-}
-
-function handleSaveAnnotation() {
-  const correction = correctedText.value.trim();
-  const type = annotationType.value;
-  
-  if (!correction) {
-    alert('Please enter a correction.');
-    return;
-  }
-  
-  if (selectedTextForAnnotation) {
-    // Create a span element for the corrected text
-    const span = document.createElement('span');
-    span.className = `highlight highlight-${type}`;
-    span.textContent = correction;
-    span.title = `Original: ${selectedTextForAnnotation.text}`;
-    
-    // If we have a selected range, replace it with our new element
-    const range = selectedTextForAnnotation.range;
-    range.deleteContents();
-    range.insertNode(span);
-    
-    // Update the total issue count
-    const totalIssuesElement = document.querySelector('.metric-card:nth-child(1) .text-2xl');
-    if (totalIssuesElement) {
-      const currentCount = parseInt(totalIssuesElement.textContent);
-      totalIssuesElement.textContent = (currentCount + 1).toString();
-    }
-    
-    // Update the issue count for the specific type
-    updateIssueCount(type);
-  } else {
-    // If no selection, just close the modal
-    console.log('No text selected for annotation');
-  }
-  
-  // Close the modal
-  hideAnnotationModal();
-}
-
-function updateIssueCount(type) {
-  // Map the type to the corresponding element
-  let countElement;
-  
-  switch (type) {
-    case 'grammar':
-      countElement = document.querySelector('.space-y-2 .flex:nth-child(3) .text-sm.font-medium');
-      break;
-    case 'filler':
-      countElement = document.querySelector('.space-y-2 .flex:nth-child(2) .text-sm.font-medium');
-      break;
-    case 'repetition':
-      countElement = document.querySelector('.space-y-2 .flex:nth-child(3) .text-sm.font-medium');
-      break;
-    case 'mispronunciation':
-      // We don't have a specific element for this in the top issues, could add one
-      break;
-  }
-  
-  if (countElement) {
-    const currentCount = parseInt(countElement.textContent);
-    countElement.textContent = (currentCount + 1).toString();
-    
-    // Also update the progress bar
-    const bar = countElement.previousElementSibling.querySelector('.h-full');
-    if (bar) {
-      // Recalculate percentages based on new values
-      const pauseCount = parseInt(document.querySelector('.space-y-2 .flex:nth-child(1) .text-sm.font-medium')?.textContent || '14');
-      const fillerCount = parseInt(document.querySelector('.space-y-2 .flex:nth-child(2) .text-sm.font-medium')?.textContent || '6');
-      const repetitionCount = parseInt(document.querySelector('.space-y-2 .flex:nth-child(3) .text-sm.font-medium')?.textContent || '4');
-      
-      const totalCount = pauseCount + fillerCount + repetitionCount;
-      
-      document.querySelector('.space-y-2 .flex:nth-child(1) .flex-1 .h-full').style.width = `${Math.round((pauseCount / totalCount) * 100)}%`;
-      document.querySelector('.space-y-2 .flex:nth-child(2) .flex-1 .h-full').style.width = `${Math.round((fillerCount / totalCount) * 100)}%`;
-      document.querySelector('.space-y-2 .flex:nth-child(3) .flex-1 .h-full').style.width = `${Math.round((repetitionCount / totalCount) * 100)}%`;
-    }
-  }
-}
-
-// Process speech text and add highlighting
-function processSpeechText(text, issues) {
-  if (!text || !issues) return text;
-  
-  let processedText = text;
-  
-  // Calculate total duration for timestamp positioning
-  const totalDuration = calculateTotalDuration(issues);
-  
-  // Process fillers
-  if (issues.fillers && issues.fillers.length > 0) {
-    issues.fillers.forEach((word, index) => {
-      const regex = new RegExp(`\\b${word.text}\\b`, 'gi');
-      processedText = processedText.replace(regex, `<span class="highlight highlight-filler filler${index+1}" data-timestamp="${word.start}:${word.end}" data-type="filler">${word.text}</span>`);
-    });
-  }
-  
-  // Process repetitions
-  if (issues.repetitions && issues.repetitions.length > 0) {
-    issues.repetitions.forEach((repetition, index) => {
-      const regex = new RegExp(`\\b${repetition.text}\\b`, 'gi');
-      processedText = processedText.replace(regex, `<span class="highlight highlight-repetition repetition${index+1}" data-timestamp="${repetition.start}:${repetition.end}" data-type="repetition">${repetition.text}</span>`);
-    });
-  }
-  
-  // Process mispronunciations
-  if (issues.mispronunciation && issues.mispronunciation.length > 0) {
-    issues.mispronunciation.forEach((word, index) => {
-      const regex = new RegExp(`\\b${word.text}\\b`, 'gi');
-      processedText = processedText.replace(regex, `<span class="highlight highlight-mispronunciation mispronunciation${index+1}" data-timestamp="${word.start}:${word.end}" data-type="mispronunciation">${word.text}</span>`);
-    });
-  }
-  
-  // Process grammar issues
-  if (issues.grammar && issues.grammar.length > 0) {
-    issues.grammar.forEach((word, index) => {
-      const regex = new RegExp(`\\b${word.text}\\b`, 'gi');
-      processedText = processedText.replace(regex, `<span class="highlight highlight-grammar grammar${index+1}" data-timestamp="${word.start}:${word.end}" data-type="grammar">${word.text}</span>`);
-    });
-  }
-  
-  // Process pauses
-  if (issues.pauses && issues.pauses.length > 0) {
-    // Sort pauses by start time
-    const sortedPauses = [...issues.pauses].sort((a, b) => a.start - b.start);
-    
-    // Calculate suitable positions for pauses
-    const textChunks = processedText.split('. '); // Split by sentence
-    
-    // If we have more pauses than sentences, some will be placed after spaces
-    let currentPosition = 0;
-    let positions = [];
-    
-    // First, try to place pauses after sentences
-    for (let i = 0; i < textChunks.length - 1 && i < sortedPauses.length; i++) {
-      currentPosition += textChunks[i].length + 2; // +2 for the '. '
-      positions.push(currentPosition - 1); // -1 to place right after the period
-    }
-    
-    // If we need more positions, try to place after spaces
-    if (positions.length < sortedPauses.length) {
-      const words = processedText.split(' ');
-      currentPosition = 0;
-      
-      for (let i = 0; i < words.length - 1 && positions.length < sortedPauses.length; i++) {
-        currentPosition += words[i].length + 1; // +1 for the space
-        // Skip if this position is already after a sentence
-        if (!positions.includes(currentPosition - 1)) {
-          positions.push(currentPosition);
-        }
-      }
-    }
-    
-    // Ensure positions are sorted and unique
-    positions = [...new Set(positions)].sort((a, b) => a - b);
-    
-    // Limit positions to the number of pauses we have
-    positions = positions.slice(0, sortedPauses.length);
-    
-    // Insert pauses at the calculated positions
-    // Insert from end to beginning to avoid changing positions
-    for (let i = positions.length - 1; i >= 0; i--) {
-      const pause = sortedPauses[i];
-      const pauseElement = `<span class="highlight highlight-pause pause${i+1}" data-timestamp="${pause.start}:${pause.end}" data-type="pause">...</span>`;
-      
-      const position = positions[i];
-      if (position < processedText.length) {
-        processedText = processedText.substring(0, position) + 
-                        pauseElement + 
-                        processedText.substring(position);
-      }
-    }
-  }
-  
-  return processedText;
-}
-
-function displayTranscript(transcript) {
-  const conversationContainer = document.querySelector('.flex-1.overflow-y-auto.px-6.pb-36 .space-y-5');
-  if (!conversationContainer || !transcript) return;
-  
-  // Clear existing conversation
-  conversationContainer.innerHTML = '';
-  
-  // Add each segment to the conversation
-  transcript.forEach(segment => {
-    const speakerType = segment.speaker.toLowerCase() === 'child' ? 'patient' : 'doctor';
-    const speakerName = segment.speaker.toLowerCase() === 'child' ? 'Patient' : 'Examiner';
-    const issueHighlightedText = speakerType === 'patient' ? processSpeechText(segment.text, segment) : segment.text;
-    
-    const segmentHTML = `
-      <div class="relative">
-        <div class="font-medium mb-1">${speakerName}</div>
-        <div class="message-bubble ${speakerType}">
-          ${issueHighlightedText}
-        </div>
-      </div>
-    `;
-    
-    conversationContainer.innerHTML += segmentHTML;
-  });
-  
-  // Attach click handlers to newly added highlights
-  attachAnnotationClickHandlers();
-  
-  // Populate the Issues tab with the new highlights
-  populateIssueItems();
 } 
