@@ -697,30 +697,34 @@ button {
 }
 
 .highlight {
-  transition: opacity 0.3s ease, background-color 0.2s ease;
-  cursor: pointer;
-  border-radius: 0.25rem;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
-  padding-top: 0.125rem;
-  padding-bottom: 0.125rem;
-}
-
-/* Handle nested highlights */
-.highlight .highlight {
-  padding-left: 0.125rem;
-  padding-right: 0.125rem;
-  padding-top: 0px;
-  padding-bottom: 0px;
-  border-radius: 2px;
-}
-
-/* Style for the currently selected highlight */
-.highlight-selected {
-  outline: 2px solid rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
   position: relative;
-  z-index: 10;
+  display: inline;
+  border-radius: 0.2rem;
+  transition: background-color 0.2s, opacity 0.2s;
+  cursor: pointer;
+}
+
+/* Add a new class for hiding only the highlight styling but keeping content visible */
+.highlight-hidden {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-weight: inherit !important;
+  color: inherit !important;
+}
+
+.highlight .highlight {
+  display: inline;
+  position: relative;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.highlight-selected {
+  position: relative;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3) !important;
+  z-index: 5;
 }
 
 .highlight-repetition {

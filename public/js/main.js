@@ -217,10 +217,15 @@ function handleAnnotationFilter() {
     const icon = this.querySelector('.material-icons');
     if (icon) icon.textContent = 'visibility_on';
     
-    // Show all annotations
+    // Show all annotations (keep content visible but show the highlight styling)
     patientBubble.querySelectorAll('.highlight').forEach(highlight => {
-      highlight.style.opacity = '1';
-      highlight.style.display = '';
+      const type = highlight.getAttribute('data-type');
+      highlight.classList.remove('highlight-hidden');
+      
+      // Make sure pauses are visible too
+      if (type === 'pause') {
+        highlight.style.display = '';
+      }
     });
     
     // Update active filters
@@ -245,15 +250,20 @@ function handleAnnotationFilter() {
           if (allIcon) allIcon.textContent = 'visibility_on';
         }
         
-        // Show all annotations
+        // Reset all highlights to visible
         patientBubble.querySelectorAll('.highlight').forEach(highlight => {
-          highlight.style.opacity = '1';
-          highlight.style.display = '';
+          const type = highlight.getAttribute('data-type');
+          highlight.classList.remove('highlight-hidden');
+          
+          // Make sure pauses are visible too
+          if (type === 'pause') {
+            highlight.style.display = '';
+          }
         });
         
         activeAnnotationFilters = ['all'];
       } else {
-        // Apply current filter combination
+        // Apply the current set of filters
         applyFilters(patientBubble);
       }
     } else {
@@ -262,14 +272,14 @@ function handleAnnotationFilter() {
       const icon = this.querySelector('.material-icons');
       if (icon) icon.textContent = 'visibility_on';
       
-      // When activating a specific filter, deactivate "All"
+      // Deactivate "All" button if it's active
       const allBtn = document.querySelector('.annotation-filter[data-type="all"]');
-      if (allBtn) {
+      if (allBtn && allBtn.classList.contains('filter-active')) {
         allBtn.classList.remove('filter-active');
         const allIcon = allBtn.querySelector('.material-icons');
         if (allIcon) allIcon.textContent = 'visibility';
         
-        // Remove "all" from active filters if it's there
+        // Remove 'all' from active filters
         activeAnnotationFilters = activeAnnotationFilters.filter(f => f !== 'all');
       }
       
@@ -278,30 +288,39 @@ function handleAnnotationFilter() {
         activeAnnotationFilters.push(filterType);
       }
       
-      // Apply new filter combination
+      // Apply the current set of filters
       applyFilters(patientBubble);
     }
   }
-  
-  console.log('Active filters:', activeAnnotationFilters);
 }
 
-// Apply the current set of active filters
+// Apply the currently active filters to the container
 function applyFilters(container) {
-  const highlights = container.querySelectorAll('.highlight');
+  if (!container) return;
   
-  // Hide all annotations first
-  highlights.forEach(highlight => {
-    highlight.style.opacity = '0';
-    highlight.style.display = 'none';
+  // First mark all highlights as hidden
+  container.querySelectorAll('.highlight').forEach(highlight => {
+    const type = highlight.getAttribute('data-type');
+    if (type === 'pause') {
+      // For pauses, we hide the content entirely
+      highlight.style.display = 'none';
+    } else {
+      // For other annotation types, we just remove the highlighting styling
+      highlight.classList.add('highlight-hidden');
+    }
   });
   
-  // Then show only those that match active filters
+  // Then show only the ones that match active filters
   activeAnnotationFilters.forEach(filterType => {
     if (filterType !== 'all') {
       container.querySelectorAll(`.highlight-${filterType}`).forEach(highlight => {
-        highlight.style.opacity = '1';
-        highlight.style.display = '';
+        if (filterType === 'pause') {
+          // Show pause content when filter is active
+          highlight.style.display = '';
+        } else {
+          // Remove the highlight-hidden class to restore styling
+          highlight.classList.remove('highlight-hidden');
+        }
       });
     }
   });
