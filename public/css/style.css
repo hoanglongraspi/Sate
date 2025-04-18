@@ -813,6 +813,140 @@ button {
   background: linear-gradient(to right, #1a91ff, #0070d1);
 }
 
+/* Sidebar resize styles */
+
+#leftResizeHandle,
+  #rightResizeHandle {
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  z-index: 30;
+}
+
+#leftResizeHandle:hover,
+  #rightResizeHandle:hover,
+  #leftResizeHandle.active,
+  #rightResizeHandle.active {
+  opacity: 1;
+}
+
+/* Sidebar transitions */
+
+#leftSidebar,
+  #rightSidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.3s ease;
+  overflow: hidden;
+  will-change: width;
+}
+
+/* Add subtle shadow effect when dragging/resizing */
+
+#leftSidebar:has(+ #leftResizeHandle.active),
+  #rightSidebar:has(+ #rightResizeHandle.active) {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Collapsed sidebar styles */
+
+.sidebar-collapsed {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+}
+
+/* Hidden sidebar toggle buttons */
+
+#showLeftSidebar,
+  #showRightSidebar {
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: translateX(0);
+  animation: fadeIn 0.3s ease 0.3s forwards;
+}
+
+#showLeftSidebar {
+  left: 10px;
+}
+
+#showRightSidebar {
+  right: 10px;
+}
+
+#showLeftSidebar button,
+  #showRightSidebar button {
+  border-radius: 9999px;
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+  padding: 0.5rem;
+  --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#showLeftSidebar button:hover,
+  #showRightSidebar button:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 246 255 / var(--tw-bg-opacity, 1));
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+/* Enhanced toggle buttons inside sidebars */
+
+#toggleLeftSidebar,
+  #toggleRightSidebar {
+  border-radius: 9999px;
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+#toggleLeftSidebar:hover,
+  #toggleRightSidebar:hover {
+  opacity: 1;
+  transform: scale(1.1);
+  --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+/* Better animations */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Special width-0 state to ensure completely hidden */
+
+.collapse {
+  visibility: collapse;
+}
+
 .fixed {
   position: fixed;
 }
@@ -837,6 +971,10 @@ button {
   left: 0px;
 }
 
+.left-3 {
+  left: 0.75rem;
+}
+
 .right-0 {
   right: 0px;
 }
@@ -845,8 +983,32 @@ button {
   right: 0.5rem;
 }
 
+.right-3 {
+  right: 0.75rem;
+}
+
+.top-0 {
+  top: 0px;
+}
+
 .top-2 {
   top: 0.5rem;
+}
+
+.top-3 {
+  top: 0.75rem;
+}
+
+.z-10 {
+  z-index: 10;
+}
+
+.z-20 {
+  z-index: 20;
+}
+
+.z-30 {
+  z-index: 30;
 }
 
 .z-50 {
@@ -948,6 +1110,10 @@ button {
   height: 100vh;
 }
 
+.w-1 {
+  width: 0.25rem;
+}
+
 .w-24 {
   width: 6rem;
 }
@@ -978,6 +1144,14 @@ button {
 
 .flex-1 {
   flex: 1 1 0%;
+}
+
+.cursor-col-resize {
+  cursor: col-resize;
+}
+
+.resize {
+  resize: both;
 }
 
 .flex-col {
@@ -1123,6 +1297,10 @@ button {
   background-color: rgb(233 213 255 / var(--tw-bg-opacity, 1));
 }
 
+.bg-transparent {
+  background-color: transparent;
+}
+
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
@@ -1130,6 +1308,14 @@ button {
 
 .p-1 {
   padding: 0.25rem;
+}
+
+.p-1\.5 {
+  padding: 0.375rem;
+}
+
+.p-2 {
+  padding: 0.5rem;
 }
 
 .p-3 {
@@ -1343,6 +1529,10 @@ button {
   transition-duration: 150ms;
 }
 
+.duration-300 {
+  transition-duration: 300ms;
+}
+
 /* Custom base styles */
 
 /* Custom components */
@@ -1352,9 +1542,24 @@ button {
   background-color: rgb(0 0 0 / var(--tw-bg-opacity, 1));
 }
 
+.hover\:bg-blue-400:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(96 165 250 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-blue-50:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 246 255 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:text-black:hover {
   --tw-text-opacity: 1;
   color: rgb(0 0 0 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-primary:hover {
+  --tw-text-opacity: 1;
+  color: rgb(93 108 250 / var(--tw-text-opacity, 1));
 }
 
 .hover\:opacity-100:hover {

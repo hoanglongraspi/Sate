@@ -18,6 +18,16 @@ const progressIndicator = document.querySelector('.audio-progress-indicator');
 const noteItems = document.querySelectorAll('.note-item');
 const tabs = document.querySelectorAll('.tab');
 
+// Sidebar elements
+const leftSidebar = document.getElementById('leftSidebar');
+const rightSidebar = document.getElementById('rightSidebar');
+const leftResizeHandle = document.getElementById('leftResizeHandle');
+const rightResizeHandle = document.getElementById('rightResizeHandle');
+const toggleLeftSidebar = document.getElementById('toggleLeftSidebar');
+const toggleRightSidebar = document.getElementById('toggleRightSidebar');
+const showLeftSidebar = document.getElementById('showLeftSidebar');
+const showRightSidebar = document.getElementById('showRightSidebar');
+
 // App state
 let isRecording = false;
 let recordingInterval = null;
@@ -28,6 +38,10 @@ let audioBlob = null;
 let audioContext = null;
 let isPlaying = false;
 let currentAudioTime = 0;
+let isResizingLeft = false;
+let isResizingRight = false;
+let startX = 0;
+let startWidth = 0;
 
 // Initialize audio context
 try {
@@ -45,6 +59,162 @@ pauseRecordingBtn.addEventListener('click', pauseRecording);
 uploadForm.addEventListener('submit', handleUpload);
 playBtn.addEventListener('click', togglePlayback);
 progressBar.addEventListener('click', seekAudio);
+
+// Sidebar resize event listeners
+leftResizeHandle.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  isResizingLeft = true;
+  startX = e.clientX;
+  startWidth = parseInt(window.getComputedStyle(leftSidebar).width, 10);
+  leftResizeHandle.classList.add('active');
+  document.body.style.cursor = 'col-resize';
+  document.addEventListener('mousemove', handleLeftResize);
+  document.addEventListener('mouseup', stopResize);
+});
+
+rightResizeHandle.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  isResizingRight = true;
+  startX = e.clientX;
+  startWidth = parseInt(window.getComputedStyle(rightSidebar).width, 10);
+  rightResizeHandle.classList.add('active');
+  document.body.style.cursor = 'col-resize';
+  document.addEventListener('mousemove', handleRightResize);
+  document.addEventListener('mouseup', stopResize);
+});
+
+// Improved sidebar toggle event listeners with animations
+toggleLeftSidebar.addEventListener('click', () => {
+  // Save current width before collapsing
+  const currentWidth = leftSidebar.style.width || window.getComputedStyle(leftSidebar).width;
+  localStorage.setItem('leftSidebarPrevWidth', currentWidth);
+  
+  // Animate sidebar collapse
+  leftSidebar.style.width = '0px';
+  leftSidebar.classList.add('sidebar-collapsed');
+  
+  // Delay showing the restore button until animation completes
+  setTimeout(() => {
+    showLeftSidebar.classList.remove('hidden');
+    showLeftSidebar.classList.add('flex');
+  }, 300);
+  
+  // Save state to localStorage
+  localStorage.setItem('leftSidebarVisible', 'false');
+});
+
+toggleRightSidebar.addEventListener('click', () => {
+  // Save current width before collapsing
+  const currentWidth = rightSidebar.style.width || window.getComputedStyle(rightSidebar).width;
+  localStorage.setItem('rightSidebarPrevWidth', currentWidth);
+  
+  // Animate sidebar collapse
+  rightSidebar.style.width = '0px';
+  rightSidebar.classList.add('sidebar-collapsed');
+  
+  // Delay showing the restore button until animation completes
+  setTimeout(() => {
+    showRightSidebar.classList.remove('hidden');
+    showRightSidebar.classList.add('flex');
+  }, 300);
+  
+  // Save state to localStorage
+  localStorage.setItem('rightSidebarVisible', 'false');
+});
+
+showLeftSidebar.addEventListener('click', () => {
+  // Hide restore button first
+  showLeftSidebar.classList.add('hidden');
+  showLeftSidebar.classList.remove('flex');
+  
+  // Get previous width or use default
+  const prevWidth = localStorage.getItem('leftSidebarPrevWidth') || '240px';
+  
+  // Animate sidebar expansion
+  leftSidebar.style.width = prevWidth;
+  leftSidebar.classList.remove('sidebar-collapsed');
+  
+  // Save state to localStorage
+  localStorage.setItem('leftSidebarVisible', 'true');
+});
+
+showRightSidebar.addEventListener('click', () => {
+  // Hide restore button first
+  showRightSidebar.classList.add('hidden');
+  showRightSidebar.classList.remove('flex');
+  
+  // Get previous width or use default
+  const prevWidth = localStorage.getItem('rightSidebarPrevWidth') || '320px';
+  
+  // Animate sidebar expansion
+  rightSidebar.style.width = prevWidth;
+  rightSidebar.classList.remove('sidebar-collapsed');
+  
+  // Save state to localStorage
+  localStorage.setItem('rightSidebarVisible', 'true');
+});
+
+// Optimized resize functions with animation frame for smoother performance
+function handleLeftResize(e) {
+  if (!isResizingLeft) return;
+  
+  // Use requestAnimationFrame for smoother performance
+  requestAnimationFrame(() => {
+    const width = startWidth + (e.clientX - startX);
+    
+    // Improved min/max constraints with smoother behavior
+    if (width >= 180 && width <= 500) {
+      leftSidebar.style.width = `${width}px`;
+      
+      // Update any related elements that depend on sidebar width
+      document.dispatchEvent(new CustomEvent('sidebar-resized'));
+    }
+  });
+}
+
+function handleRightResize(e) {
+  if (!isResizingRight) return;
+  
+  // Use requestAnimationFrame for smoother performance
+  requestAnimationFrame(() => {
+    const width = startWidth - (e.clientX - startX);
+    
+    // Improved min/max constraints with smoother behavior
+    if (width >= 180 && width <= 500) {
+      rightSidebar.style.width = `${width}px`;
+      
+      // Update any related elements that depend on sidebar width
+      document.dispatchEvent(new CustomEvent('sidebar-resized'));
+    }
+  });
+}
+
+function stopResize() {
+  if (isResizingLeft) {
+    leftResizeHandle.classList.remove('active');
+  }
+  if (isResizingRight) {
+    rightResizeHandle.classList.remove('active');
+  }
+  
+  isResizingLeft = false;
+  isResizingRight = false;
+  document.body.style.cursor = '';
+  document.removeEventListener('mousemove', handleLeftResize);
+  document.removeEventListener('mousemove', handleRightResize);
+  
+  // Save sidebar widths to localStorage with improved error handling
+  try {
+    if (leftSidebar.style.width) {
+      localStorage.setItem('leftSidebarWidth', leftSidebar.style.width);
+    }
+    if (rightSidebar.style.width) {
+      localStorage.setItem('rightSidebarWidth', rightSidebar.style.width);
+    }
+  } catch (e) {
+    console.warn('Failed to save sidebar state to localStorage', e);
+  }
+}
 
 // Add click events to all note items
 noteItems.forEach(note => {
@@ -320,6 +490,46 @@ window.addEventListener('click', (e) => {
   }
 });
 
+// Load saved sidebar state with improved animation and error handling
+function loadSidebarState() {
+  try {
+    // Load left sidebar state
+    const leftSidebarVisible = localStorage.getItem('leftSidebarVisible');
+    if (leftSidebarVisible === 'false') {
+      leftSidebar.style.width = '0px';
+      leftSidebar.classList.add('sidebar-collapsed');
+      showLeftSidebar.classList.remove('hidden');
+      showLeftSidebar.classList.add('flex');
+    } else {
+      // Load saved width
+      const leftWidth = localStorage.getItem('leftSidebarWidth');
+      if (leftWidth) {
+        leftSidebar.style.width = leftWidth;
+      }
+    }
+    
+    // Load right sidebar state
+    const rightSidebarVisible = localStorage.getItem('rightSidebarVisible');
+    if (rightSidebarVisible === 'false') {
+      rightSidebar.style.width = '0px';
+      rightSidebar.classList.add('sidebar-collapsed');
+      showRightSidebar.classList.remove('hidden');
+      showRightSidebar.classList.add('flex');
+    } else {
+      // Load saved width
+      const rightWidth = localStorage.getItem('rightSidebarWidth');
+      if (rightWidth) {
+        rightSidebar.style.width = rightWidth;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load sidebar state from localStorage', e);
+    // Reset to defaults on error
+    leftSidebar.style.width = '240px';
+    rightSidebar.style.width = '320px';
+  }
+}
+
 // Initialize the app
 function init() {
   // Hide the modals
@@ -328,6 +538,9 @@ function init() {
   
   uploadModal.classList.add('hidden');
   uploadModal.classList.remove('flex');
+  
+  // Load saved sidebar state
+  loadSidebarState();
   
   // Listen for server events
   socket.on('connect', () => {
